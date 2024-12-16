@@ -166,23 +166,29 @@ public:
         scrollAreaCon->setWidget(containerCon);
 
         layoutCon = new QVBoxLayout(containerCon);
-
         headerLabelCon = new QLabel("Список соединений (0)", containerCon);
         layoutCon->addWidget(headerLabelCon);
 
         horizontalLayout->addWidget(scrollAreaCon); // Add connections block to horizontal layout
 
-        // Center Block - ATS Information
-        QWidget* atsInfoWidget = new QWidget(this);
-        QVBoxLayout* atsInfoLayout = new QVBoxLayout(atsInfoWidget);
+        // Center Block - ATS Information with button
+        QFrame* atsInfoFrame = new QFrame(this);
+        atsInfoFrame->setFrameShape(QFrame::StyledPanel); // Set frame style
+        atsInfoFrame->setLineWidth(1); // Set line width
+        atsInfoFrame->setContentsMargins(5, 5, 5, 5); // Set margins
 
-        atsInfoWidget->setFixedWidth(200); // Set a fixed width for the ATS info section
+        QVBoxLayout* atsInfoLayout = new QVBoxLayout(atsInfoFrame);
 
-        atsInfoLayout->addWidget(new QLabel("Информация об АТС", atsInfoWidget));
-        atsInfoLayout->addWidget(new QLabel("Версия АТС: 1.0", atsInfoWidget));
-        atsInfoLayout->addWidget(new QLabel("Статус АТС: Работает", atsInfoWidget));
+        atsInfoLayout->addWidget(new QLabel("Информация об АТС", atsInfoFrame));
+        atsInfoLayout->addWidget(new QLabel("Версия АТС: 1.0", atsInfoFrame));
+        atsInfoLayout->addWidget(new QLabel("Статус АТС: Работает", atsInfoFrame));
 
-        horizontalLayout->addWidget(atsInfoWidget); // Add ATS info block to horizontal layout
+        createButton = new QPushButton("Создать абонента", this);
+        atsInfoLayout->addWidget(createButton); // Move the button into the ATS info block
+
+        connect(createButton, &QPushButton::clicked, this, &AbonentManager::showCreateDialog);
+
+        horizontalLayout->addWidget(atsInfoFrame); // Add ATS info block to horizontal layout
 
         // Right Block - List of Abonents
         QScrollArea* scrollArea = new QScrollArea(this);
@@ -198,12 +204,6 @@ public:
         horizontalLayout->addWidget(scrollArea); // Add abonents block to horizontal layout
 
         mainLayout->addLayout(horizontalLayout); // Add the complete horizontal layout to main layout
-
-        // Button to create a new abonent
-        createButton = new QPushButton("Создать абонента", this);
-        mainLayout->addWidget(createButton);
-
-        connect(createButton, &QPushButton::clicked, this, &AbonentManager::showCreateDialog);
 
         QString statusArr[4] = {"Готов", "Разговор", "Вызов", "Свободен"};
         QString phoneArr[6] = {"Вася", "Коля", "Виталий", "Саня", "Аноним", "ski tiger"};
@@ -226,7 +226,6 @@ public:
 
         // Set maximum width for the abonents section
         scrollArea -> setMaximumWidth(400 );
-
     }
 
     void showCreateDialog() {
