@@ -15,6 +15,8 @@ SOURCES += \
     createAbonentDialog.cpp \
     interface.cpp \
     main.cpp \
+    ../common/communicator.cpp \
+    ../common/common.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -26,4 +28,6 @@ HEADERS += \
     abonentWidget.h \
     chatWindow.h \
     createAbonentDialog.h \
-    interface.h
+    interface.h \
+    ../common/communicator.h \
+    ../common/common.h
