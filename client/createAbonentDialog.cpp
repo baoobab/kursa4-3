@@ -1,4 +1,7 @@
 #include "createAbonentDialog.h"
+#include "../server/ats.h"
+#include "../server/abonent.h"
+
 
 CreateAbonentDialog::CreateAbonentDialog(QWidget* parent) : QDialog(parent) {
 
@@ -29,6 +32,14 @@ void CreateAbonentDialog::createAbonent() {
 //       emit abonentCreated(name, status); // Uncomment if needed.
        accept();
    }
+   Abonent *abonent = new Abonent("Eblan", "+78800553535");
+   ATS ats;
+   ats.addAbonent(abonent);
+
+
+   Abonent *abonent1 = new Abonent("Eblan2", "+7880055353222");
+   ats.addAbonent(abonent1);
+
 }
 
 CreateAbonentDialog::~CreateAbonentDialog()

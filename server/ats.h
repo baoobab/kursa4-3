@@ -9,7 +9,7 @@ class ATS {
 public:
     static void addAbonent(Abonent* abonent) {
         abonents.insert(abonent->getPhone(), abonent);
-        qDebug() << "Added abonent:" << abonent->getName() << "with phone:" << abonent->getPhone();
+        qDebug() << "Added abonent:" << abonent->getName() << "with phone:" << abonent->getPhone() << abonents.size();
     }
 
     static void removeAbonent(const QString& phone) {
@@ -36,5 +36,7 @@ public:
 private:
     static QMap<QString, Abonent*> abonents; // Key: Phone number, Value: Abonent object
 };
+
+QMap<QString, Abonent*> ATS::abonents;
 
 #endif // ATS_H
