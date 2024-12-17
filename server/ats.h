@@ -9,7 +9,7 @@ class ATS {
 public:
     static void addAbonent(Abonent* abonent) {
         abonents.insert(abonent->getPhone(), abonent);
-        qDebug() << "Added abonent:" << abonent->getName() << "with phone:" << abonent->getPhone() << abonents.size();
+        qDebug() << "Added abonent:" << abonent->getName() << "with phone:" << abonent->getPhone();
     }
 
     static void removeAbonent(const QString& phone) {
@@ -24,12 +24,21 @@ public:
         return abonents.contains(phone) ? abonents[phone] : nullptr;
     }
 
-    static void changeAbonentStatus(const QString& phone, Abonent::ConnectionStatus newStatus) {
-        if (abonents.contains(phone)) {
-            abonents[phone]->setStatus(newStatus);
-            qDebug() << "Changed status of abonent with phone:" << phone;
+    static void initiateCall(const QString& callerPhone, const QString& targetPhone) {
+        Abonent* caller = getAbonent(callerPhone);
+        Abonent* target = getAbonent(targetPhone);
+
+        if (!caller || !target) {
+            qDebug() << "Caller or target not found.";
+            return;
+        }
+
+        if (caller->getStatus() == Abonent::ConnectionStatus::Ready &&
+            target->getStatus() == Abonent::ConnectionStatus::Ready) {
+            caller->makeCall(target);
+            target->receiveCall(caller);
         } else {
-            qDebug() << "Abonent not found with phone:" << phone;
+            qDebug() << "One of the abonents is not ready for a call.";
         }
     }
 
@@ -37,6 +46,7 @@ private:
     static QMap<QString, Abonent*> abonents; // Key: Phone number, Value: Abonent object
 };
 
+// Definition of the static member
 QMap<QString, Abonent*> ATS::abonents;
 
 #endif // ATS_H
