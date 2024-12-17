@@ -14,8 +14,15 @@ public:
         Free
     };
 
-    Abonent(const QString& name, const QString& phone, TCommParams& params, ConnectionStatus status = ConnectionStatus::Free)
-        : Person(name, phone), status(status), communicator(new TCommunicator(params)) {
+    Abonent(const QString& name, const QString& phone)
+        : Person(name, phone), status(ConnectionStatus::Free) {
+        TCommParams params;
+        params.rHost = QHostAddress::LocalHost;
+        params.rPort = abonentPort;
+        params.sHost = QHostAddress::LocalHost;
+        params.sPort = ++abonentPort;
+
+        communicator(params);
         connect(communicator, &TCommunicator::received, this, &Abonent::onMessageReceived);
     }
 
@@ -49,6 +56,8 @@ private slots:
 private:
     ConnectionStatus status;
     TCommunicator* communicator; // Communicator instance for sending/receiving messages
+
+    static quint16 abonentPort = 10000;
 };
 
 #endif // ABONENT_H
