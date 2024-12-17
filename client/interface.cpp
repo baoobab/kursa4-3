@@ -1,4 +1,4 @@
-#include "include\interface.h"
+#include "interface.h"
 
 TInterface::TInterface(int& argc, char** argv) : app(argc, argv) {
     abonentManager = new AbonentManager();

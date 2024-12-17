@@ -1,4 +1,4 @@
-#include "include\abonentManager.h"
+#include "abonentManager.h"
 
 AbonentManager::AbonentManager(QWidget* parent) : QWidget(parent) {
 

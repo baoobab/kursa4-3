@@ -1,4 +1,4 @@
-#include "include\createAbonentDialog.h"
+#include "createAbonentDialog.h"
 
 CreateAbonentDialog::CreateAbonentDialog(QWidget* parent) : QDialog(parent) {
 

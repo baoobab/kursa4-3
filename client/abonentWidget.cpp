@@ -1,4 +1,4 @@
-#include "include\abonentWidget.h"
+#include "abonentWidget.h"
 #include <QVBoxLayout>
 
 AbonentWidget::AbonentWidget(const QString& name, const QString& phone, const QString& status, QWidget* parent)

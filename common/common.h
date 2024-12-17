@@ -1,0 +1,37 @@
+#ifndef COMMON_H
+#define COMMON_H
+
+#include <QString>
+
+enum RequestType
+{
+    CANONICAL_FORM_REQUEST = 1,
+    CLASSICAL_FORM_REQUEST,
+    CHANGE_ROOTS_COUNT_REQUEST,
+    CHANGE_ROOT_REQUEST,
+    CALCULATE_VALUE_AT_X_REQUEST,
+    SET_NEW_POLYNOMIAL_REQUEST,
+    SET_CANONIC_COEF_REQUEST,
+    ADD_ROOTS_REQUEST
+};
+enum ResponseType {
+    CANONICAL_FORM_ANSWER = 1,
+    CLASSICAL_FORM_ANSWER,
+    CHANGE_ROOTS_COUNT_ANSWER,
+    CHANGE_ROOT_ANSWER,
+    CALCULATE_VALUE_AT_X_ANSWER,
+    SET_NEW_POLYNOMIAL_ANSWER,
+    SET_CANONIC_COEF_ANSWER,
+    ADD_ROOTS_ANSWER,
+    ERROR_UNKNOWN_REQUEST = -1 // Для обработки неизвестных запросов
+};
+
+enum PolynomMode {
+    COMPLEX_MODE = 1,
+    REAL_MODE
+};
+
+extern const QChar separator;
+QString& operator<< (QString&,const QString&);
+
+#endif // COMMON_H
