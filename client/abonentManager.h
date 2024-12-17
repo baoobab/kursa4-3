@@ -18,21 +18,23 @@ class AbonentManager : public QWidget {
 public:
     AbonentManager(QWidget* parent = nullptr);
     ~AbonentManager();
+public slots:
+    void handleDeleteRequest();
+    void addAbonent(const QString& name, const QString& phone, const QString& status = "Свободен");
 private slots:
     void showCreateDialog();
-    void addAbonent(const QString& name, const QString& phone, const QString& status);
     void removeAbonent(AbonentWidget* abonent);
-
 private:
     void updateHeader();
 
 private:
+    void drawAbonentsTable();
     QLabel *headerLabel;
     QLabel *headerLabelCon;
     QPushButton *createButton;
     QVBoxLayout *layout;
     QVBoxLayout *layoutCon;
-    std::vector<AbonentWidget *> abonents;
+    std::vector<AbonentWidget *> abonentsWidget;
 };
 
 

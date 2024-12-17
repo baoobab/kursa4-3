@@ -7,7 +7,7 @@
 
 class Abonent : public Person {
 public:
-    enum class ConnectionStatus {
+    enum class  ConnectionStatus {
         Ready,
         InCall,
         OnHold,

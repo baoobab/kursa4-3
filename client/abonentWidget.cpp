@@ -23,7 +23,8 @@ AbonentWidget::AbonentWidget(const QString& name, const QString& phone, const QS
 
     deleteButton = new QPushButton("Удалить", this);
 
-//     connect(deleteButton, &QPushButton::clicked, this, &AbonentWidget::deleteAbonent); // Uncomment if needed
+    connect(deleteButton, &QPushButton::clicked, this, &AbonentWidget::deleteAbonent);
+
 
    topLayout->addWidget(nameLabel);
    topLayout->addWidget(phoneLabel);
@@ -42,6 +43,14 @@ void AbonentWidget::makeCall() {
    chatWindow->show();
 }
 
+void AbonentWidget::deleteAbonent() {
+   emit deleteRequested(); // Emit signal to request deletion
+}
+
+QString AbonentWidget::getPhone()
+{
+    return this->phone;
+}
 AbonentWidget::~AbonentWidget()
 {
     delete nameLabel;

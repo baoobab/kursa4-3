@@ -10,11 +10,11 @@ CreateAbonentDialog::CreateAbonentDialog(QWidget* parent) : QDialog(parent) {
 
    nameInput = new QLineEdit(this);
    phoneInput = new QLineEdit(this); // Not used yet but can be implemented later
-   statusInput = new QLineEdit(this);
+//   statusInput = new QLineEdit(this);
 
    layout->addRow("Имя:", nameInput);
    layout->addRow("Телефон:", phoneInput);
-   layout->addRow("Статус:", statusInput);
+//   layout->addRow("Статус:", statusInput);
 
    QPushButton* createButton = new QPushButton("Создать", this);
 
@@ -25,20 +25,22 @@ CreateAbonentDialog::CreateAbonentDialog(QWidget* parent) : QDialog(parent) {
 
 void CreateAbonentDialog::createAbonent() {
    QString name = nameInput->text();
+   QString phone = phoneInput->text();
    // TODO: handle phone input if needed.
-   QString status = statusInput->text();
+//   QString status = statusInput->text();
 
-   if (!name.isEmpty() && !status.isEmpty()) {
-//       emit abonentCreated(name, status); // Uncomment if needed.
+   if (!name.isEmpty() && !phone.isEmpty() /*&& !status.isEmpty()*/)
+   {
+       emit abonentCreated(name, phone/*, status*/); // Emit signal with details
        accept();
+//       Abonent *abonent = new Abonent(name, phone);
+//       ATS ats; // need SINGLETONE
+//       ats.addAbonent(abonent);
    }
-   Abonent *abonent = new Abonent("Eblan", "+78800553535");
-   ATS ats;
-   ats.addAbonent(abonent);
-
-
-   Abonent *abonent1 = new Abonent("Eblan2", "+7880055353222");
-   ats.addAbonent(abonent1);
+   else
+   {
+           // Handle empty fields (optional)
+   }
 
 }
 

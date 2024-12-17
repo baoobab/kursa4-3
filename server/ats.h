@@ -47,6 +47,6 @@ private:
 };
 
 // Definition of the static member
-QMap<QString, Abonent*> ATS::abonents;
+//QMap<QString, Abonent*> ATS::abonents;
 
 #endif // ATS_H

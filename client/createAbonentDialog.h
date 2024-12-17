@@ -17,7 +17,7 @@ private slots:
     void createAbonent();
 
 signals:
-    void abonentCreated(const QString& name, const QString& status);
+    void abonentCreated(const QString& name, const QString& phone, const QString& status = "Свободен");
 
 private:
     QLineEdit* nameInput;

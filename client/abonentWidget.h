@@ -13,11 +13,14 @@ class AbonentWidget : public QWidget {
     Q_OBJECT
 
 public:
-    AbonentWidget(const QString& name, const QString& phone, const QString& status, QWidget* parent = nullptr);
+    AbonentWidget(const QString& name, const QString& phone, const QString& status = "Свободен", QWidget* parent = nullptr);
     ~AbonentWidget();
+    QString getPhone();
+signals:
+    void deleteRequested(); // Signal emitted when delete is requested
 private slots:
     void makeCall();
-
+    void deleteAbonent(); // Slot for handling deletion
 private:
     QString name;
     QString phone;
