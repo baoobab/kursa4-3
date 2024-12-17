@@ -1,4 +1,4 @@
-#include "chatWindow.h"
+#include "include\chatWindow.h"
 
 ChatWindow::ChatWindow(const QString& abonent1, const QString& abonent2, QWidget* parent)
     : QWidget(parent), abonent1(abonent1), abonent2(abonent2) {
