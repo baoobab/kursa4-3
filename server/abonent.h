@@ -18,12 +18,12 @@ public:
         : Person(name, phone), status(ConnectionStatus::Free) {
         TCommParams params;
         params.rHost = QHostAddress::LocalHost;
-        params.rPort = abonentPort;
+        params.rPort = 10000;//abonentPort;
         params.sHost = QHostAddress::LocalHost;
-        params.sPort = ++abonentPort;
+        params.sPort = 10001;//++abonentPort;
 
-        communicator(params);
-        connect(communicator, &TCommunicator::received, this, &Abonent::onMessageReceived);
+        TCommunicator communicator(params);
+        // connect(communicator, &TCommunicator::received, this, &Abonent::onMessageReceived);
     }
 
     ~Abonent() {
@@ -57,7 +57,7 @@ private:
     ConnectionStatus status;
     TCommunicator* communicator; // Communicator instance for sending/receiving messages
 
-    static quint16 abonentPort = 10000;
+    // static quint16 abonentPort = 10000;
 };
 
 #endif // ABONENT_H
