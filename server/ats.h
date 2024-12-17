@@ -7,12 +7,12 @@
 
 class ATS {
 public:
-    void addAbonent(Abonent* abonent) {
+    static void addAbonent(Abonent* abonent) {
         abonents.insert(abonent->getPhone(), abonent);
         qDebug() << "Added abonent:" << abonent->getName() << "with phone:" << abonent->getPhone();
     }
 
-    void removeAbonent(const QString& phone) {
+    static void removeAbonent(const QString& phone) {
         if (abonents.remove(phone) > 0) {
             qDebug() << "Removed abonent with phone:" << phone;
         } else {
@@ -20,11 +20,11 @@ public:
         }
     }
 
-    Abonent* getAbonent(const QString& phone) {
+    static Abonent* getAbonent(const QString& phone) {
         return abonents.contains(phone) ? abonents[phone] : nullptr;
     }
 
-    void changeAbonentStatus(const QString& phone, Abonent::ConnectionStatus newStatus) {
+    static void changeAbonentStatus(const QString& phone, Abonent::ConnectionStatus newStatus) {
         if (abonents.contains(phone)) {
             abonents[phone]->setStatus(newStatus);
             qDebug() << "Changed status of abonent with phone:" << phone;
@@ -34,7 +34,7 @@ public:
     }
 
 private:
-    QMap<QString, Abonent*> abonents; // Key: Phone number, Value: Abonent object
+    static QMap<QString, Abonent*> abonents; // Key: Phone number, Value: Abonent object
 };
 
 #endif // ATS_H

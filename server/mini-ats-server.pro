@@ -10,8 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     ../common/communicator.cpp \
-    ../common/common.cpp \
-    main.cpp
+    ../common/common.cpp
 
 
 # Default rules for deployment.
