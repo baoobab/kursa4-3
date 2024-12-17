@@ -10,7 +10,8 @@ CONFIG += c++17
 
 SOURCES += \
     ../common/communicator.cpp \
-    ../common/common.cpp
+    ../common/common.cpp \
+    main.cpp
 
 
 # Default rules for deployment.
@@ -20,4 +21,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     ../common/communicator.h \
-    ../common/common.h
+    ../common/common.h \
+    abonent.h \
+    ats.h \
+    person.h
