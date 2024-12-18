@@ -1,166 +1,164 @@
 #include "abonentManager.h"
-#include "QMap"
-#include "QtDebug"
-#include "abonent.h"
-#include "ats.h"
+#include <QApplication>
+#include <QDebug>
+#include <QFrame>
 
-AbonentManager::AbonentManager(QWidget* parent) : QWidget(parent) {
-   QVBoxLayout* mainLayout = new QVBoxLayout(this);
+AbonentManager::AbonentManager(QWidget* parent) : QWidget(parent)
+{
+    QVBoxLayout* mainLayout = new QVBoxLayout(this);
+    QHBoxLayout* horizontalLayout = new QHBoxLayout();
 
-   // Horizontal layout for three sections
-   QHBoxLayout* horizontalLayout = new QHBoxLayout();
+    // Left Block - List of Connections
+    QScrollArea* scrollAreaCon = new QScrollArea(this);
+    scrollAreaCon->setWidgetResizable(true);
+    QWidget* containerCon = new QWidget();
+    scrollAreaCon->setWidget(containerCon);
+    layoutCon = new QVBoxLayout(containerCon);
+    headerLabelCon = new QLabel("Список соединений (0)", containerCon);
+    layoutCon->addWidget(headerLabelCon);
+    horizontalLayout->addWidget(scrollAreaCon);
 
-   // Left Block - List of Connections
-   QScrollArea* scrollAreaCon = new QScrollArea(this);
-   scrollAreaCon->setWidgetResizable(true);
-   QWidget* containerCon = new QWidget();
-   scrollAreaCon->setWidget(containerCon);
-   layoutCon = new QVBoxLayout(containerCon);
-   headerLabelCon = new QLabel("Список соединений (0)", containerCon);
-   layoutCon->addWidget(headerLabelCon);
-   horizontalLayout->addWidget(scrollAreaCon);
+    // Center Block - ATS Information with button
+    QFrame* atsInfoFrame = new QFrame(this);
+    atsInfoFrame->setFrameShape(QFrame::StyledPanel);
+    atsInfoFrame->setLineWidth(1);
+    atsInfoFrame->setContentsMargins(5, 5, 5, 5);
+    QVBoxLayout* atsInfoLayout = new QVBoxLayout(atsInfoFrame);
+    atsInfoLayout->addWidget(new QLabel("Информация об АТС", atsInfoFrame));
+    atsInfoLayout->addWidget(new QLabel("Версия АТС: 1.0", atsInfoFrame));
+    atsInfoLayout->addWidget(new QLabel("Статус АТС: Работает", atsInfoFrame));
+    createButton = new QPushButton("Создать абонента", this);
+    atsInfoLayout->addWidget(createButton);
+    connect(createButton, &QPushButton::clicked, this, &AbonentManager::showCreateDialog);
+    horizontalLayout->addWidget(atsInfoFrame);
 
-   // Center Block - ATS Information with button
-   QFrame* atsInfoFrame = new QFrame(this);
-   atsInfoFrame->setFrameShape(QFrame::StyledPanel);
-   atsInfoFrame->setLineWidth(1);
-   atsInfoFrame->setContentsMargins(5, 5, 5, 5);
-   QVBoxLayout* atsInfoLayout = new QVBoxLayout(atsInfoFrame);
-   atsInfoLayout->addWidget(new QLabel("Информация об АТС", atsInfoFrame));
-   atsInfoLayout->addWidget(new QLabel("Версия АТС: 1.0", atsInfoFrame));
-   atsInfoLayout->addWidget(new QLabel("Статус АТС: Работает", atsInfoFrame));
-   createButton = new QPushButton("Создать абонента", this);
-   atsInfoLayout->addWidget(createButton);
-   connect(createButton, &QPushButton::clicked, this, &AbonentManager::showCreateDialog);
-   horizontalLayout->addWidget(atsInfoFrame);
+    // Right Block - List of Abonents
+    QScrollArea* scrollArea = new QScrollArea(this);
+    scrollArea->setWidgetResizable(true);
+    QWidget* container = new QWidget();
+    scrollArea->setWidget(container);
+    layout = new QVBoxLayout(container);
+    headerLabel = new QLabel("Список абонентов (0)", container);
+    layout->addWidget(headerLabel);
+    horizontalLayout->addWidget(scrollArea);
 
-   // Right Block - List of Abonents
-   QScrollArea* scrollArea = new QScrollArea(this);
-   scrollArea->setWidgetResizable(true);
-   QWidget* container = new QWidget();
-   scrollArea->setWidget(container);
-   layout = new QVBoxLayout(container);
-   headerLabel = new QLabel("Список абонентов (0)", container);
-   layout->addWidget(headerLabel);
-   horizontalLayout->addWidget(scrollArea);
-   mainLayout->addLayout(horizontalLayout);
+    mainLayout->addLayout(horizontalLayout);
 
-
-
-   // draw table of abonents
-   drawAbonentsTable();
-
-   scrollArea->setMaximumWidth(400);
+    // Draw table of abonents
+    drawAbonentsTable();
 }
 
-void AbonentManager::showCreateDialog() {
-//       CreateAbonentDialog dialog(this);
-//       dialog.exec();
+void AbonentManager::showCreateDialog()
+{
+    createAbonentDialog = new QDialog(this);
+    QFormLayout* layout = new QFormLayout(createAbonentDialog);
+    createAbonentDialog->setWindowTitle("Добавление абонента");
 
-    CreateAbonentDialog* dialog = new CreateAbonentDialog(this);
-    connect(dialog, &CreateAbonentDialog::abonentCreated, this, &AbonentManager::addAbonent);
-    dialog->exec();
+    nameInput = new QLineEdit(createAbonentDialog);
+    phoneInput = new QLineEdit(createAbonentDialog);
+
+    layout->addRow("Имя:", nameInput);
+    layout->addRow("Телефон:", phoneInput);
+
+    QPushButton* createButton = new QPushButton("Создать", createAbonentDialog);
+
+    connect(createButton, &QPushButton::clicked, this, [this]()
+    {
+        QString name = nameInput->text();
+        QString phone = phoneInput->text();
+        if (!name.isEmpty() && !phone.isEmpty())
+        {
+            addAbonent(name, phone);
+            createAbonentDialog->accept();
+        }
+    });
+
+    layout->addWidget(createButton);
+    createAbonentDialog->exec();
 }
 
-void AbonentManager::addAbonent(const QString& name, const QString& phone, const QString& status) {
-    AbonentWidget* abonentWidget = new AbonentWidget(name, phone, status);
-    layout->addWidget(abonentWidget);
-    abonentsWidget.push_back(abonentWidget);
-    updateHeader(); // Update header after adding
+void AbonentManager::addAbonent(const QString& name, const QString& phone)
+{
+    QWidget* abonentWidget = new QWidget(this);
+    QHBoxLayout* abonentLayout = new QHBoxLayout(abonentWidget);
+
+    QLabel* nameLabel = new QLabel(name, abonentWidget);
+    QLabel* phoneLabel = new QLabel(phone, abonentWidget);
+
+    QPushButton* deleteButton = new QPushButton("Удалить", abonentWidget);
+    QPushButton* callButton = new QPushButton("Позвонить", abonentWidget);
+    QPushButton* messageButton = new QPushButton("Отправить сообщение", abonentWidget);
+
+    connect(deleteButton, &QPushButton::clicked, this, [this, abonentWidget]()
+    {
+        removeAbonent(abonentWidget);
+    });
+
+    connect(callButton, &QPushButton::clicked, this, [this, phone]()
+    {
+        initiateCall("YourPhoneNumber", phone); // Replace "YourPhoneNumber" with the actual caller's phone number
+    });
+
+   connect(messageButton, &QPushButton::clicked, this, [this, phone]()
+   {
+       sendMessage("YourPhoneNumber", phone, "Hello!"); // Replace "YourPhoneNumber" and message as needed
+   });
+
+   abonentLayout->addWidget(nameLabel);
+   abonentLayout->addWidget(phoneLabel);
+   abonentLayout->addWidget(callButton);
+   abonentLayout->addWidget(messageButton);
+   abonentLayout->addWidget(deleteButton);
+
+   layout->addWidget(abonentWidget);
+
+   abonentsWidget.push_back(abonentWidget);
+
+   ats.addAbonent(name, phone, 2228); // Add abonent to ATS // TODO: 2228 - ZAGLUSHKA - SET UP WITH NETW
+   updateHeader();
 }
 
-void AbonentManager::removeAbonent(AbonentWidget* abonent) {
-       layout -> removeWidget(abonent);
-       abonent -> deleteLater();
-       abonentsWidget.erase(std::remove(abonentsWidget.begin(), abonentsWidget.end(), abonent), abonentsWidget.end());
-       updateHeader();
+void AbonentManager::removeAbonent(QWidget* abonent)
+{
+   layout->removeWidget(abonent);
+   abonent->deleteLater();
+   abonentsWidget.erase(std::remove(abonentsWidget.begin(), abonentsWidget.end(), abonent), abonentsWidget.end());
+   updateHeader();
 }
 
-void AbonentManager::updateHeader() {
-       headerLabel -> setText("Список абонентов (" + QString::number(abonentsWidget.size()) + ")");
+void AbonentManager::updateHeader()
+{
+   headerLabel->setText("Список абонентов (" + QString::number(abonentsWidget.size()) + ")");
 }
 
 void AbonentManager::drawAbonentsTable()
 {
-    // ### temporary stuff for test waiting for hella backend
-    // example of abonents mappyyy
-    QMap<QString, Abonent*> abonents;
-
-
-    // Sample data for abonents
-    QString statusArr[4] = {"Готов", "Разговор", "Вызов", "Свободен"};
-    QString phoneArr[6] = {"Вася", "Коля", "Виталий", "Саня", "Аноним", "ski tiger"};
-    QString numsArr[6] = {"8 980 123 53 21", "8 972 142 32 21",
-                          "8 980 424 11 22", "8 924 332 13 78",
-                          "8 927 421 32 55", "8 970 768 05 30"};
-
-    for (int i = 0; i < 6; ++i)
-    {
-        Abonent* abonent = new Abonent(phoneArr[i], numsArr[i]);
-        abonents.insert(numsArr[i], abonent);
-    }
-    // temporary stuff for test waiting for hella backend ###
-
-
-
-    // iterate through map
-    for (auto it = abonents.cbegin(); it != abonents.cend(); ++it)
-    {
-       QString name = abonents[it.key()]->getName();
-       QString phone = abonents[it.key()]->getPhone();
-       Abonent::ConnectionStatus status = abonents[it.key()]->getStatus();
-
-       QString statusStr;
-       switch (status) {
-           case Abonent::ConnectionStatus::Ready:
-               statusStr = "Готов";
-               break;
-           case Abonent::ConnectionStatus::InCall:
-               statusStr = "Разговор";
-               break;
-           case Abonent::ConnectionStatus::OnHold:
-               statusStr = "Вызов";
-               break;
-           case Abonent::ConnectionStatus::Free:
-               statusStr = "Свободен";
-               break;
-           default:
-               statusStr = "Неизвестно"; // Handle unexpected statuses
-               break;
-       }
-       AbonentWidget *abonentWidget= new AbonentWidget(name, phone/*, statusStr*/);
-       layout->addWidget(abonentWidget );
-
-       connect(abonentWidget, &AbonentWidget::deleteRequested, this, &AbonentManager::handleDeleteRequest);
-
-       abonentsWidget.push_back(abonentWidget );
-    }
-
-    updateHeader();
+   // Sample data for abonents
+   addAbonent("Вася", "8 980 123 53 21");
+   addAbonent("Коля", "8 972 142 32 21");
+   addAbonent("Виталий", "8 980 424 11 22");
+   addAbonent("Саня", "8 924 332 13 78");
+   addAbonent("Аноним", "8 927 421 32 55");
+   addAbonent("ski tiger", "8 970 768 05 30");
 }
 
-void AbonentManager::handleDeleteRequest()
+void AbonentManager::initiateCall(const QString& callerPhone, const QString& targetPhone)
 {
+   ats.initiateCall(callerPhone, targetPhone);
+}
 
-    AbonentWidget* abonent = qobject_cast<AbonentWidget*>(sender());
-       if (abonent)
-       {
-           removeAbonent(abonent); // Call remove method
-//           ATS ats; // need SINGLETONE
-//           ats.removeAbonent(abonent->getPhone());
-       }
-       else
-       {
-           qDebug() << "Failed to delete abonent: sender is not an AbonentWidget.";
-       }
+void AbonentManager::sendMessage(const QString& fromPhone, const QString& toPhone, const QString& message)
+{
+   ats.sendMessage(fromPhone, toPhone, message);
 }
 
 AbonentManager::~AbonentManager()
 {
-    delete headerLabel;
-    delete headerLabelCon;
-    delete createButton;
-    delete layout;
-    delete layoutCon;
-//    delet abonents;
+   qDeleteAll(abonentsWidget);
+   delete headerLabel;
+   delete headerLabelCon;
+   delete createButton;
+   delete layout;
+   delete layoutCon;
+   delete createAbonentDialog;
 }
