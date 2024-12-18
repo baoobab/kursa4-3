@@ -8,8 +8,9 @@
 #include <QHBoxLayout>
 
 #include "chatWindow.h"
+#include "baseInterface.h"
 
-class AbonentWidget : public QWidget {
+class AbonentWidget : public QWidget, BaseInterface {
     Q_OBJECT
 
 public:

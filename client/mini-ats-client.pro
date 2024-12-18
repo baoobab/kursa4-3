@@ -26,6 +26,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     abonentManager.h \
     abonentWidget.h \
+    baseInterface.h \
     chatWindow.h \
     createAbonentDialog.h \
     interface.h \

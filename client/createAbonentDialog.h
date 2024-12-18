@@ -7,7 +7,9 @@
 #include <QPushButton>
 #include <QFormLayout>
 
-class CreateAbonentDialog : public QDialog {
+#include "baseInterface.h"
+
+class CreateAbonentDialog : public QDialog, BaseInterface {
     Q_OBJECT
 
 public:

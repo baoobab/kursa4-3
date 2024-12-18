@@ -11,8 +11,9 @@
 
 #include "abonentWidget.h"
 #include "createAbonentDialog.h"
+#include "baseInterface.h"
 
-class AbonentManager : public QWidget {
+class AbonentManager : public QWidget, BaseInterface {
     Q_OBJECT
 
 public:

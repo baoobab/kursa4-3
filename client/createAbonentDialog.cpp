@@ -1,5 +1,5 @@
 #include "createAbonentDialog.h"
-#include "../server/ats.h"
+//#include "../server/ats.h"
 #include "../server/abonent.h"
 
 
