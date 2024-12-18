@@ -30,4 +30,7 @@ HEADERS += \
     createAbonentDialog.h \
     interface.h \
     ../common/communicator.h \
-    ../common/common.h
+    ../common/common.h \
+    abonent.h \
+    ats.h \
+    person.h

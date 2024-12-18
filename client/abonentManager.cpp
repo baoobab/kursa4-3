@@ -1,8 +1,8 @@
 #include "abonentManager.h"
 #include "QMap"
 #include "QtDebug"
-#include "../server/abonent.h"
-#include "../server/ats.h"
+#include "abonent.h"
+#include "ats.h"
 
 AbonentManager::AbonentManager(QWidget* parent) : QWidget(parent) {
    QVBoxLayout* mainLayout = new QVBoxLayout(this);
