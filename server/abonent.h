@@ -1,11 +1,9 @@
 #ifndef ABONENT_H
 #define ABONENT_H
 
-#include "person.h"
-#include "../common/communicator.h"
 #include <QDebug>
 
-class Abonent : public Person {
+class Abonent {
 public:
     enum class  ConnectionStatus {
         Ready,
@@ -14,50 +12,33 @@ public:
         Free
     };
 
-    Abonent(const QString& name, const QString& phone)
-        : Person(name, phone), status(ConnectionStatus::Free) {
-        TCommParams params;
-        params.rHost = QHostAddress::LocalHost;
-        params.rPort = 10000;//abonentPort;
-        params.sHost = QHostAddress::LocalHost;
-        params.sPort = 10001;//++abonentPort;
-
-        TCommunicator communicator(params);
-        // connect(communicator, &TCommunicator::received, this, &Abonent::onMessageReceived);
-    }
-
-    ~Abonent() {
-        delete communicator;
+    Abonent(const QString& phone, const quint16 address) {
+        this->phone = phone;
+        this->address = address;
+        this->status = ConnectionStatus::Ready;
     }
 
     ConnectionStatus getStatus() const { return status; }
+    quint16 getAddress() const { return address; }
+    QString getPhone() const { return phone; }
     void setStatus(ConnectionStatus newStatus) {
         status = newStatus;
-        qDebug() << "Abonent" << getName() << "status changed to" << static_cast<int>(newStatus);
+        qDebug() << "Abonent" << getPhone() << "status changed to" << static_cast<int>(newStatus);
     }
 
-    void makeCall(Abonent* target);
-    void receiveCall(Abonent* caller);
-    void endCall();
+    // void makeCall(Abonent* target);
+    // void receiveCall(Abonent* caller);
+    // void endCall();
 
-    void sendMessage(const QString& message) {
-        QByteArray msg = message.toUtf8();
-        communicator->send(msg);
-        qDebug() << getName() << "sent message:" << message;
-    }
+    // void sendMessage(const QString& message) {
 
-private slots:
-    void onMessageReceived(QByteArray msg) {
-        QString message = QString::fromUtf8(msg);
-        qDebug() << getName() << "received message:" << message;
-        // Handle incoming messages (e.g., display in chat)
-    }
+    // }
+
 
 private:
     ConnectionStatus status;
-    TCommunicator* communicator; // Communicator instance for sending/receiving messages
-
-    // static quint16 abonentPort = 10000;
+    quint16 address;
+    QString phone;
 };
 
 #endif // ABONENT_H

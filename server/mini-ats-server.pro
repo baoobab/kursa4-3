@@ -10,7 +10,9 @@ CONFIG += c++17
 
 SOURCES += \
     ../common/communicator.cpp \
-    ../common/common.cpp
+    ../common/common.cpp \
+    application.cpp \
+    main.cpp
 
 
 # Default rules for deployment.
@@ -22,5 +24,6 @@ HEADERS += \
     ../common/communicator.h \
     ../common/common.h \
     abonent.h \
+    application.h \
     ats.h \
     person.h
