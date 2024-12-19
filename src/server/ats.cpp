@@ -10,14 +10,13 @@
 #include "../common/communicator.h"
 
 ATSMessage ATS::addAbonent(const QString& name, const QString& phone) {
-    auto abonentsCountBefore = abonents.size();
+    if (abonents.contains(phone)) {
+        return ATSMessage("Abonent already exists"); // Возврат ошибки
+    }
 
     Abonent* abonent = new Abonent(name, phone);
     abonents.insert(abonent->getPhone(), abonent);
 
-    if (abonents.size() == abonentsCountBefore) {
-        return ATSMessage("Abonent already exists"); // Возврат ошибки
-    }
     if (maxCallsCount == callRecords.length()) {
         qDebug() << "Free connections not found";
         return ATSMessage("Free connections not found");
@@ -48,6 +47,23 @@ Abonent::ConnectionStatus ATS::getAbonentStatus(const QString& phone) {
     if (abonent) return abonent->getStatus();
     return Abonent::ConnectionStatus::Free;
 }
+
+QString ATS::getAbonentStatusString (const QString& phone) {
+    auto status = getAbonentStatus(phone);
+
+    switch (status) {
+    case Abonent::ConnectionStatus::Free: {
+        return "Свободен";
+    }
+    case Abonent::ConnectionStatus::Ready: {
+        return "Готов";
+    }
+    case Abonent::ConnectionStatus::InCall: {
+        return "Разговор";
+    }
+    }
+}
+
 
 ATSMessage ATS::initiateCall(const QString& callerPhone, const QString& targetPhone) {
     if (maxCallsCount == callRecords.length()) {
@@ -210,6 +226,13 @@ void ATS::sendMessage(const QString& fromPhone, const QString& toPhone, const QS
 // TODO: задавать степенью двойки
 void ATS::setMaxCallsCount(unsigned newCount) {
     maxCallsCount = newCount;
+}
+
+int ATS::getCurrentConnections() {
+    return (int)callRecords.length();
+}
+int ATS::getMaxConnections() {
+    return (int)maxCallsCount;
 }
 
 void ATS::receive(QByteArray msg) {

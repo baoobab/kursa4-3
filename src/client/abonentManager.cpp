@@ -83,15 +83,9 @@ AbonentManager::AbonentManager(QWidget* parent) : QWidget(parent)
 
     connect(&ats, &ATS::messageReceived, this, [this](QString from, QString to, QString message)
     {
-
-        // Find the corresponding chat window and append the message
-        // You may need to maintain a list of chat windows to find the correct one
         for (auto chatWindow : chatWindows)
         {
-            // Assuming you maintain a list of chat windows
-            if ((chatWindow->fromPhone == from && chatWindow->toPhone == to) ||
-
-                (chatWindow->fromPhone == to && chatWindow->toPhone == from))
+            if ((chatWindow->fromPhone == to && chatWindow->toPhone == from))
             {
                 chatWindow->appendMessage(from + ": " + message);
                 break;
@@ -100,72 +94,89 @@ AbonentManager::AbonentManager(QWidget* parent) : QWidget(parent)
     });
 }
 
+Person* AbonentManager::findPerson(const QString& phone) {
+    for (auto person : persons) {
+        if (person->getPhone() == phone) return person;
+    }
+    return nullptr;
+}
+bool AbonentManager::appendPerson(const QString& name, const QString& phone) {
+    if (findPerson(phone)) return false;
+    persons.append(new Person(name, phone, &ats));
+    return true;
+}
+
+QString AbonentManager::getStylesViaStatus(Abonent::ConnectionStatus status) {
+    switch (status) {
+    case Abonent::ConnectionStatus::Free: {
+        return "color: red;";
+    }
+    case Abonent::ConnectionStatus::Ready: {
+        return "color: green;";
+    }
+    case Abonent::ConnectionStatus::InCall: {
+        return "color: blue;";
+    }
+    }
+}
+
+
 void AbonentManager::handleCallEnded(const QString& fromPhone, const QString& toPhone)
-
 {
-    // Get the abonents involved in the call
+    Person* endingAbonent = findPerson(fromPhone);
+    if (endingAbonent) {
+        endingAbonent->endCall();
+    }
 
-        Abonent* endingAbonent = ats.getAbonent(fromPhone); // The one who ends the call
-
-        Abonent* otherAbonent = ats.getAbonent(toPhone); // The other abonent
-
-
-        if (endingAbonent) {
-
-            // Set the ending abonent's status to "Отошел" (On Hold)
-            endingAbonent->setStatus(Abonent::ConnectionStatus::OnHold);
-
-        }
-
-        if (otherAbonent->getStatus() == Abonent::ConnectionStatus::OnHold)
+    QList<int> toRemove;
+    for (int i = 0; i < chatWindows.length(); i++)
+    {
+        auto chatWindow = chatWindows[i];
+        if ((chatWindow->fromPhone == fromPhone && chatWindow->toPhone == toPhone) ||
+            (chatWindow->fromPhone == toPhone && chatWindow->toPhone == fromPhone))
         {
-            endingAbonent->setStatus(Abonent::ConnectionStatus::OnHold);
-            return;
+            toRemove.append(i);
+
+            disconnect(chatWindow, &ChatWindow::messageSent, this, &AbonentManager::sendMessage);
+            disconnect(chatWindow, &ChatWindow::callEnded, this, &AbonentManager::handleCallEnded);
+            chatWindow->accept();
+            delete chatWindow;
         }
+    }
 
-        if (otherAbonent) {
+    for (auto idx : toRemove) {
+        chatWindows.remove(idx, 2);
+        break;
+    }
 
-            // Set the other abonent's status to "Готов" (Ready)
+    for (QWidget* abonentWidget : abonentsWidget) {
 
-            otherAbonent->setStatus(Abonent::ConnectionStatus::Ready);
+        QHBoxLayout* abonentLayout = qobject_cast<QHBoxLayout*>(abonentWidget->layout());
 
-        }
+        if (abonentLayout) {
 
+            QLabel* phoneLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(1)->widget());
 
-        // Update the UI for both abonents to reflect the status changes
-
-        for (QWidget* abonentWidget : abonentsWidget) {
-
-            QHBoxLayout* abonentLayout = qobject_cast<QHBoxLayout*>(abonentWidget->layout());
-
-            if (abonentLayout) {
-
-                QLabel* phoneLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(1)->widget()); // Assuming phone label is at index 1
-
-                QLabel* statusLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(2)->widget()); // Assuming status label is at index 2
+            QLabel* statusLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(2)->widget());
 
 
-                if (phoneLabel) {
+            if (phoneLabel) {
 
-                    if (phoneLabel->text() == fromPhone) {
+                if (phoneLabel->text() == fromPhone) {
 
-                        if (statusLabel) {
+                    if (statusLabel) {
+                        QString currStatus = ats.getAbonentStatusString(fromPhone);
+                        statusLabel->setText(currStatus);
+                        statusLabel->setStyleSheet(getStylesViaStatus(ats.getAbonentStatus(fromPhone)));
 
-                            statusLabel->setText("Отошел"); // Update the status label to "Отошел"
+                    }
 
-                            statusLabel->setStyleSheet("color: red;"); // Set color to red or any color you prefer
+                } else if (phoneLabel->text() == toPhone) {
 
-                        }
-
-                    } else if (phoneLabel->text() == toPhone) {
-
-                        if (statusLabel) {
-
-                            statusLabel->setText("Готов"); // Update the status label to "Готов"
-
-                            statusLabel->setStyleSheet("color: green;"); // Set color to green or any color you prefer
-
-                        }
+                    if (statusLabel) {
+                        QString currStatus = ats.getAbonentStatusString(toPhone);
+                        statusLabel->setText(currStatus);
+                        statusLabel->setStyleSheet(getStylesViaStatus(ats.getAbonentStatus(toPhone)));
 
                     }
 
@@ -175,10 +186,7 @@ void AbonentManager::handleCallEnded(const QString& fromPhone, const QString& to
 
         }
 
-
-    // Logic to end the call in ATS
-
-//    ats.endCall(fromPhone, toPhone); TOODO: implement
+    }
 
 }
 
@@ -196,11 +204,11 @@ void AbonentManager::showHangUpReceiverDialog()
 
     // Create a combo box to select an abonent
     QComboBox* abonentComboBox = new QComboBox(this);
-    QList<Abonent*> abonentsList = ats.getAllAbonents();
+    // QList<Abonent*> abonentsList = ats.getAllAbonents();
 
-    for (Abonent* abonent : abonentsList)
+    for (Person* person : persons)
     {
-        abonentComboBox->addItem(abonent->getName(), abonent->getPhone());
+        abonentComboBox->addItem(person->getName(), person->getPhone());
     }
 
 
@@ -222,12 +230,12 @@ void AbonentManager::showHangUpReceiverDialog()
     if (dialog.exec() == QDialog::Accepted)
     {
         QString selectedPhone = abonentComboBox->currentData().toString();
-        Abonent* selectedAbonent = ats.getAbonent(selectedPhone);
+        Person* selectedPerson = findPerson(selectedPhone);
 
-        if (selectedAbonent)
+        if (selectedPerson)
         {
-
-            selectedAbonent->setStatus(Abonent::ConnectionStatus::Free); // Set status to Free
+            selectedPerson->endCall();
+            selectedPerson->hangUpPhone();
 
             // Update the UI to reflect the change in status
             for (QWidget* abonentWidget : abonentsWidget)
@@ -241,8 +249,9 @@ void AbonentManager::showHangUpReceiverDialog()
                         QLabel* statusLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(2)->widget()); // Assuming status label is at index 2
                         if (statusLabel)
                         {
-                            statusLabel->setText("Отошел"); // Update the status label
-                            statusLabel->setStyleSheet("color: red;"); // Change color to yellow
+                            QString currStatus = ats.getAbonentStatusString(selectedPhone);
+                            statusLabel->setText(currStatus); // Update the status label to "Отошел"
+                            statusLabel->setStyleSheet(getStylesViaStatus(ats.getAbonentStatus(selectedPhone))); // Set color to red or any color you prefer
                         }
                         break;
                     }
@@ -250,10 +259,15 @@ void AbonentManager::showHangUpReceiverDialog()
             }
         }
     }
+    updateCurrentConnections();
 }
 
 void AbonentManager::showPickUpReceiverDialog()
 {
+    if (ats.getCurrentConnections() == ats.getMaxConnections()) {
+        QMessageBox::warning(this, "Ошибка", "Не осталось свободных соединений");
+        return;
+    }
     // Create a dialog
 
     QDialog dialog(this);
@@ -268,11 +282,10 @@ void AbonentManager::showPickUpReceiverDialog()
 
     // Create a combo box to select an abonent
     QComboBox* abonentComboBox = new QComboBox(this);
-    QList<Abonent*> abonentsList = ats.getAllAbonents();
 
-    for (Abonent* abonent : abonentsList)
+    for (Person* person : persons)
     {
-        abonentComboBox->addItem(abonent->getName(), abonent->getPhone());
+        abonentComboBox->addItem(person->getName(), person->getPhone());
     }
 
     layout->addWidget(abonentComboBox);
@@ -280,9 +293,7 @@ void AbonentManager::showPickUpReceiverDialog()
     // Create an OK button
     QPushButton* okButton = new QPushButton("OK", this);
     connect(okButton, &QPushButton::clicked, [&dialog, abonentComboBox]() {
-
         dialog.accept(); // Close the dialog when OK is clicked
-
     });
 
     layout->addWidget(okButton);
@@ -290,62 +301,52 @@ void AbonentManager::showPickUpReceiverDialog()
     // Show the dialog and wait for user input
     if (dialog.exec() == QDialog::Accepted)
     {
-//        QString selectedPhone = abonentComboBox->currentData().toString();
-//        Abonent* selectedAbonent = ats.getAbonent(selectedPhone);
-//        if (selectedAbonent)
-//        {
-//            selectedAbonent->setStatus(Abonent::ConnectionStatus::Ready); // Set status to Ready
-//            // Update the UI to reflect the change in status
-////            updateAbonentList(); // Implement this method to refresh the UI
-//        }
         QString selectedPhone = abonentComboBox->currentData().toString();
 
-                Abonent* selectedAbonent = ats.getAbonent(selectedPhone);
+        Person* selectedPerson = findPerson(selectedPhone);
 
-                if (selectedAbonent)
+        if (selectedPerson)
+        {
+            selectedPerson->pickUpPhone();
+
+            // Update the UI to reflect the change in status
+
+            for (QWidget* abonentWidget : abonentsWidget)
+
+            {
+
+                QHBoxLayout* abonentLayout = qobject_cast<QHBoxLayout*>(abonentWidget->layout());
+
+                if (abonentLayout)
 
                 {
 
-                    selectedAbonent->setStatus(Abonent::ConnectionStatus::Ready); // Set status to Ready
+                    QLabel* phoneLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(1)->widget()); // Assuming phone label is at index 1
 
-
-                    // Update the UI to reflect the change in status
-
-                    for (QWidget* abonentWidget : abonentsWidget)
+                    if (phoneLabel && phoneLabel->text() == selectedPhone)
 
                     {
 
-                        QHBoxLayout* abonentLayout = qobject_cast<QHBoxLayout*>(abonentWidget->layout());
+                        QLabel* statusLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(2)->widget()); // Assuming status label is at index 2
 
-                        if (abonentLayout)
+                        if (statusLabel)
 
                         {
-
-                            QLabel* phoneLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(1)->widget()); // Assuming phone label is at index 1
-
-                            if (phoneLabel && phoneLabel->text() == selectedPhone)
-
-                            {
-
-                                QLabel* statusLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(2)->widget()); // Assuming status label is at index 2
-
-                                if (statusLabel)
-
-                                {
-
-                                    statusLabel->setText("Готов"); // Update the status label
-                                    statusLabel->setStyleSheet("color: green;"); // Change color to green
-                                }
-
-                                break;
-
-                            }
+                            QString currStatus = ats.getAbonentStatusString(selectedPhone);
+                            statusLabel->setText(currStatus); // Update the status label to "Отошел"
+                            statusLabel->setStyleSheet(getStylesViaStatus(ats.getAbonentStatus(selectedPhone))); // Set color to red or any color you prefer
 
                         }
+
+                        break;
 
                     }
 
                 }
+
+            }
+
+        }
     }
 }
 
@@ -359,6 +360,11 @@ void AbonentManager::removeSelectedAbonent()
 // Implement the showCreateConnectionDialog slot
 void AbonentManager::showCreateConnectionDialog()
 {
+    if (ats.getMaxConnections() == ats.getCurrentConnections()) {
+        QMessageBox::warning(this, "Ошибка", "Не осталось свободных соединений");
+        return;
+    }
+
     QDialog* createConnectionDialog = new QDialog(this);
     createConnectionDialog->setWindowTitle("Создать соединение");
     QVBoxLayout* dialogLayout = new QVBoxLayout(createConnectionDialog);
@@ -370,11 +376,10 @@ void AbonentManager::showCreateConnectionDialog()
 
 
     // Populate the combo boxes with abonents
-    QList<Abonent*> abonentsList = ats.getAllAbonents(); // Use the new method
-    for (Abonent* abonent : abonentsList)
+    for (Person* person : persons)
     {
-        abonent1ComboBox->addItem(abonent->getName(), abonent->getPhone());
-        abonent2ComboBox->addItem(abonent->getName(), abonent->getPhone());
+        abonent1ComboBox->addItem(person->getName(), person->getPhone());
+        abonent2ComboBox->addItem(person->getName(), person->getPhone());
     }
 
 
@@ -391,25 +396,57 @@ void AbonentManager::showCreateConnectionDialog()
     connect(buttonBox, &QDialogButtonBox::rejected, createConnectionDialog, &QDialog::reject);
     dialogLayout->addWidget(buttonBox);
 
-    if (currentConnections < maxConnections && createConnectionDialog->exec() == QDialog::Accepted)
+    if (createConnectionDialog->exec() == QDialog::Accepted)
     {
-        currentConnections++;
 
         QString abonent1Phone = abonent1ComboBox->currentData().toString();
         QString abonent2Phone = abonent2ComboBox->currentData().toString();
 
-        // Check the status of the selected abonents
-        Abonent* abonent1 = ats.getAbonent(abonent1Phone);
-        Abonent* abonent2 = ats.getAbonent(abonent2Phone);
-        if (abonent1->getStatus() != Abonent::ConnectionStatus::Ready || abonent2->getStatus() != Abonent::ConnectionStatus::Ready)
+        if (abonent1Phone == abonent2Phone) {
+            QMessageBox::warning(this, "Ошибка", "Нельзя позвонить самому себе");
+            return;
+        }
+        if (ats.getAbonentStatus(abonent1Phone) != Abonent::ConnectionStatus::Ready || ats.getAbonentStatus(abonent2Phone) != Abonent::ConnectionStatus::Ready)
         {
             QMessageBox::warning(this, "Ошибка", "Оба абонента должны быть в статусе 'Готов' для создания соединения.");
-            return; // Exit the method if either abonent is not ready
+            return;
         }
 
 
         // Logic to create the connection
-        initiateCall(abonent1Phone, abonent2Phone);
+        Person* caller = findPerson(abonent1Phone);
+        Person* target = findPerson(abonent2Phone);
+        caller->makeCall(target);
+        updateCurrentConnections();
+
+        for (QWidget* abonentWidget : abonentsWidget)
+        {
+
+            QHBoxLayout* abonentLayout = qobject_cast<QHBoxLayout*>(abonentWidget->layout());
+            if (abonentLayout)
+            {
+                QLabel* phoneLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(1)->widget());
+                if (phoneLabel && phoneLabel->text() == caller->getPhone())
+                {
+                    QLabel* statusLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(2)->widget());
+                    if (statusLabel)
+                    {
+                        QString currStatus = ats.getAbonentStatusString(caller->getPhone());
+                        statusLabel->setText(currStatus);
+                        statusLabel->setStyleSheet(getStylesViaStatus(ats.getAbonentStatus(caller->getPhone())));
+                    }
+                } else if (phoneLabel && phoneLabel->text() == target->getPhone())
+                {
+                    QLabel* statusLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(2)->widget());
+                    if (statusLabel)
+                    {
+                        QString currStatus = ats.getAbonentStatusString(target->getPhone());
+                        statusLabel->setText(currStatus);
+                        statusLabel->setStyleSheet(getStylesViaStatus(ats.getAbonentStatus(target->getPhone())));
+                    }
+                }
+            }
+        }
 
         ChatWindow* chatWindowA = new ChatWindow(abonent1Phone, abonent2Phone, this);
         ChatWindow* chatWindowB = new ChatWindow(abonent2Phone, abonent1Phone, this);
@@ -436,9 +473,12 @@ void AbonentManager::showCreateConnectionDialog()
 }
 
 void AbonentManager::sendMessage(const QString& fromPhone, const QString& toPhone, const QString& message) {
-
-    ats.sendMessage(fromPhone, toPhone, message);
-
+    // ats.sendMessage(fromPhone, toPhone, message);
+    Person* from = findPerson(fromPhone);
+    Person* to = findPerson(toPhone);
+    if (from && to) {
+        from->sendMessage(to, message);
+    }
 }
 
 void AbonentManager::showCreateDialog()
@@ -461,7 +501,11 @@ void AbonentManager::showCreateDialog()
         QString phone = phoneInput->text();
         if (!name.isEmpty() && !phone.isEmpty())
         {
-            addAbonent(name, phone);
+            if (appendPerson(name, phone)) addAbonent(name, phone);
+            else {
+                QMessageBox::warning(this, "Ошибка", "Абонент с таким номером уже существует");
+                return;
+            }
             createAbonentDialog->accept();
         }
     });
@@ -477,45 +521,19 @@ void AbonentManager::addAbonent(const QString& name, const QString& phone)
     QLabel* nameLabel = new QLabel(name, abonentWidget);
     QLabel* phoneLabel = new QLabel(phone, abonentWidget);
 
-    // Add a status label
-//    QLabel* statusLabel = new QLabel("Вызов", abonentWidget); // You can change the status as needed
-//    statusLabel->setStyleSheet("color: blue;"); // Set initial color to red for "Занят"
-    QLabel* statusLabel = new QLabel("Отошел", abonentWidget); // You can change the status as needed
-    statusLabel->setStyleSheet("color: red;"); // Set initial color to red for "Занят"
-
-
-//    QPushButton* deleteButton = new QPushButton("Удалить", abonentWidget);
-
-//    connect(deleteButton, &QPushButton::clicked, this, [this, abonentWidget]()
-//    {
-//        removeAbonent(abonentWidget);
-//    });
+    QLabel* statusLabel = new QLabel(ats.getAbonentStatusString(phone), abonentWidget);
+    statusLabel->setStyleSheet(getStylesViaStatus(ats.getAbonentStatus(phone)));
 
     // Only add the delete button and status label
     abonentLayout->addWidget(nameLabel);
     abonentLayout->addWidget(phoneLabel);
     abonentLayout->addWidget(statusLabel); // Add the status label
-//    abonentLayout->addWidget(deleteButton); // Add the delete button
 
     layout->addWidget(abonentWidget);
 
-
     abonentsWidget.push_back(abonentWidget);
 
-    ats.addAbonent(name, phone, 2228); // Add abonent to ATS // TODO: 2228 - ZAGLUSHKA - SET UP WITH NETW
     updateHeader();
-
-//    connect(callButton, &QPushButton::clicked, this, [this, phone]()
-//    {
-//        initiateCall("YourPhoneNumber", phone); // Replace "YourPhoneNumber" with the actual caller's phone number
-//    });
-
-//   connect(messageButton, &QPushButton::clicked, this, [this, phone]()
-//   {
-//       sendMessage("YourPhoneNumber", phone, "Hello!"); // Replace "YourPhoneNumber" and message as needed
-//   });
-
-
 }
 
 void AbonentManager::removeAbonent(QWidget* abonent)
@@ -524,6 +542,7 @@ void AbonentManager::removeAbonent(QWidget* abonent)
    abonent->deleteLater();
    abonentsWidget.erase(std::remove(abonentsWidget.begin(), abonentsWidget.end(), abonent), abonentsWidget.end());
    updateHeader();
+   drawAbonentsTable();
 }
 
 void AbonentManager::updateHeader()
@@ -533,83 +552,76 @@ void AbonentManager::updateHeader()
 
 void AbonentManager::drawAbonentsTable()
 {
-   // Sample data for abonents
-   addAbonent("Вася", "8 980 123 53 21");
-   addAbonent("Коля", "8 972 142 32 21");
-   addAbonent("Виталий", "8 980 424 11 22");
-   addAbonent("Саня", "8 924 332 13 78");
-   addAbonent("Аноним", "8 927 421 32 55");
-   addAbonent("ski tiger", "8 970 768 05 30");
+    for (auto p : persons) {
+        addAbonent(p->getName(), p->getPhone());
+    }
 }
 
 void AbonentManager::initiateCall(const QString& callerPhone, const QString& targetPhone)
 {
-   ats.initiateCall(callerPhone, targetPhone);
-   // Change the status of both abonents to InCall
+    Person* caller = findPerson(callerPhone);
+    Person* target = findPerson(targetPhone);
 
-   Abonent* callerAbonent = ats.getAbonent(callerPhone);
+    caller->makeCall(target);
 
-   Abonent* targetAbonent = ats.getAbonent(targetPhone);
+    // Update the UI for both abonents
 
+    for (QWidget* abonentWidget : abonentsWidget) {
 
-   if (callerAbonent) {
+        QHBoxLayout* abonentLayout = qobject_cast<QHBoxLayout*>(abonentWidget->layout());
 
-       callerAbonent->setStatus(Abonent::ConnectionStatus::InCall);
+        if (abonentLayout) {
 
-   }
+            QLabel* phoneLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(1)->widget()); // Assuming phone label is at index 1
 
-   if (targetAbonent) {
-
-       targetAbonent->setStatus(Abonent::ConnectionStatus::InCall);
-
-   }
+            QLabel* statusLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(2)->widget()); // Assuming status label is at index 2
 
 
-   // Update the UI for both abonents
+            if (phoneLabel) {
 
-   for (QWidget* abonentWidget : abonentsWidget) {
-
-       QHBoxLayout* abonentLayout = qobject_cast<QHBoxLayout*>(abonentWidget->layout());
-
-       if (abonentLayout) {
-
-           QLabel* phoneLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(1)->widget()); // Assuming phone label is at index 1
-
-           QLabel* statusLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(2)->widget()); // Assuming status label is at index 2
-
-
-           if (phoneLabel) {
-
-               if (phoneLabel->text() == callerPhone || phoneLabel->text() == targetPhone) {
-
-                   if (statusLabel) {
-
-                       statusLabel->setText("Вызов"); // Update the status label to "Вызов"
-
-                       statusLabel->setStyleSheet("color: blue;"); // Set color to blue or any color you prefer
-
-                   }
-               }
-           }
-       }
-   }
+                if (phoneLabel->text() == callerPhone) {
+                    if (statusLabel) {
+                        QString currStatus = ats.getAbonentStatusString(callerPhone);
+                        statusLabel->setText(currStatus);
+                        statusLabel->setStyleSheet(getStylesViaStatus(ats.getAbonentStatus(callerPhone)));
+                    }
+                } else if (phoneLabel->text() == targetPhone) {
+                    if (statusLabel) {
+                        QString currStatus = ats.getAbonentStatusString(targetPhone);
+                        statusLabel->setText(currStatus);
+                        statusLabel->setStyleSheet(getStylesViaStatus(ats.getAbonentStatus(targetPhone)));
+                    }
+                }
+            }
+        }
+    }
 }
 
-
+void AbonentManager::updateCurrentConnections() {
+    headerLabelCon->setText(QString("Список соединений (%1)").arg(ats.getCurrentConnections()));
+}
 void AbonentManager::increaseMaxConnections()
 {
-    maxConnections++;
-    maxConnectionsLabel->setText(QString("Максимальное количество соединений: %1").arg(maxConnections));
+    ats.setMaxCallsCount(ats.getMaxConnections() + 1);
+    maxConnectionsLabel->setText(QString("Максимальное количество соединений: %1").arg(ats.getMaxConnections()));
 }
 
 
 void AbonentManager::decreaseMaxConnections()
 {
-    if (maxConnections > 0)
-    {
-        maxConnections--;
-        maxConnectionsLabel->setText(QString("Максимальное количество соединений: %1").arg(maxConnections));
+    if (ats.getCurrentConnections() == ats.getMaxConnections()) {
+        QMessageBox::warning(this, "Ошибка", "Остались незавершённые звонки - закончите их, чтобы уменить макс. число соединений");
+        return;
     }
+
+    if (ats.getMaxConnections() <= 0)
+    {
+        QMessageBox::warning(this, "Ошибка", "Меньше нуля быть не может");
+        return;
+    }
+
+    ats.setMaxCallsCount(ats.getMaxConnections() - 1);
+    maxConnectionsLabel->setText(QString("Максимальное количество соединений: %1").arg(ats.getMaxConnections()));
 }
 
 

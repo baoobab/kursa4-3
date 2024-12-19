@@ -6,7 +6,7 @@
 #include <QDebug>
 #include <QObject>
 #include <QList>
-#include "../common/communicator.h"
+#include "common/communicator.h"
 
 
 // Структура ответа от АТС
@@ -27,10 +27,14 @@ public:
     static const quint16 address = 10000; // адрес АТС
 
     QList<Abonent*> getAllAbonents();
+    int getCurrentConnections();
+    int getMaxConnections();
+
     ATSMessage addAbonent(const QString& name, const QString& phone);
     ATSMessage removeAbonent(const QString& phone);
     Abonent* getAbonent(const QString& phone);
     Abonent::ConnectionStatus getAbonentStatus(const QString& phone);
+    QString getAbonentStatusString (const QString& phone);
 
     ATSMessage initiateCall(const QString& callerPhone, const QString& targetPhone);
     ATSMessage endCall(const QString& phone);
@@ -61,7 +65,7 @@ private:
 
     QMap<QString, Abonent*> abonents;
     QList<CallRecord> callRecords;
-    unsigned maxCallsCount;
+    unsigned maxCallsCount = 0;
 
     int findCallRecord(const QString& phone);
 };

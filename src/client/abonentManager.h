@@ -16,8 +16,9 @@
 #include <QVector>
 #include <QComboBox> // Include QComboBox for selecting abonents
 
-#include "ats.h" // Include ATS header
-#include "abonent.h" // Include Abonent header
+#include "server/ats.h" // Include ATS header
+#include "server/abonent.h" // Include Abonent header
+#include "server/person.h"
 
 #include "chatWindow.h"
 
@@ -39,12 +40,12 @@ private slots:
     void sendMessage(const QString& fromPhone, const QString& toPhone, const QString& message);
     void increaseMaxConnections();
     void decreaseMaxConnections();
+    void updateCurrentConnections();
     void showCreateConnectionDialog(); // New slot for creating a connection
     void removeSelectedAbonent(); // New slot for removing selected abonent
     void showPickUpReceiverDialog();
     void showHangUpReceiverDialog();
     void handleCallEnded(const QString& fromPhone, const QString& toPhone);
-
 private:
     QLabel* headerLabel;
     QLabel* headerLabelCon;
@@ -76,10 +77,13 @@ private:
 
     // ATS instance
     ATS ats; // Instance of ATS to manage abonents
-    int maxConnections = 0; // TODO: redo with ats's internal amount of maxConnections
-    int currentConnections = 0;
+    QList<Person*> persons; // For storing users
+
     QList<ChatWindow*> chatWindows;
 
+    QString getStylesViaStatus(Abonent::ConnectionStatus status);
+    Person* findPerson(const QString& phone);
+    bool appendPerson(const QString& name, const QString& phone);
 };
 
 #endif // ABONENTMANAGER_H

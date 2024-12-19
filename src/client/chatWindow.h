@@ -18,7 +18,6 @@ public:
     ChatWindow(const QString& fromPhone, const QString& toPhone, QWidget* parent = nullptr);
     void appendMessage(const QString& message);
 
-
 signals:
     void messageSent(const QString& fromPhone, const QString& toPhone, const QString& message); // Signal to send messages
     void callEnded(const QString& fromPhone, const QString& toPhone); // Signal to end the call

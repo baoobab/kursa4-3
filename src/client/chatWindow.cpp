@@ -6,6 +6,7 @@ ChatWindow::ChatWindow(const QString& fromPhone, const QString& toPhone, QWidget
 
     setWindowTitle("Chat between " + fromPhone + " and " + toPhone);
     resize(400, 300);
+
     QVBoxLayout* layout = new QVBoxLayout(this);
 
     chatArea = new QTextEdit(this);
@@ -31,7 +32,6 @@ ChatWindow::ChatWindow(const QString& fromPhone, const QString& toPhone, QWidget
 
 }
 
-
 void ChatWindow::sendMessage()
 {
     QString message = messageInput->text();
@@ -53,23 +53,8 @@ void ChatWindow::appendMessage(const QString& message)
 }
 
 void ChatWindow::endCall()
-
 {
-
-    // Emit a signal to notify that the call is ending
-
     emit callEnded(fromPhone, toPhone);
-
-    this->accept(); // Close the chat window
+    // this->accept(); // Close the chat window
 
 }
-
-
-
-//ChatWindow::~ChatWindow()
-//{
-
-//    delete chatArea;
-//    delete messageInput;
-//    delete sendButton;
-//}
