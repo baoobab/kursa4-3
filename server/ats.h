@@ -29,9 +29,11 @@ public:
     // ATS(QObject* parent = nullptr); // конструктор
     // ~ATS(); // деструктор для освобождения ресурсов
 
+    QList<Abonent*> getAllAbonents();
     ATSMessage addAbonent(const QString& name, const QString& phone);
     ATSMessage removeAbonent(const QString& phone);
     Abonent* getAbonent(const QString& phone);
+    Abonent::ConnectionStatus getAbonentStatus(const QString& phone);
 
     ATSMessage initiateCall(const QString& callerPhone, const QString& targetPhone);
     ATSMessage endCall(const QString& phone);

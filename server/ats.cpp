@@ -43,6 +43,12 @@ Abonent* ATS::getAbonent(const QString& phone) {
     return abonents.contains(phone) ? abonents[phone] : nullptr;
 }
 
+Abonent::ConnectionStatus ATS::getAbonentStatus(const QString& phone) {
+    auto abonent = getAbonent(phone);
+    if (abonent) return abonent->getStatus();
+    return Abonent::ConnectionStatus::Free;
+}
+
 ATSMessage ATS::initiateCall(const QString& callerPhone, const QString& targetPhone) {
     if (maxCallsCount == callRecords.length()) {
         qDebug() << "Free connections not found";
@@ -125,8 +131,8 @@ ATSMessage ATS::endCall(const QString& phone) {
         qDebug() << "Failed to end call for one or both abonents";
         return ATSMessage("Failed to end call");
     }
-    abonents.remove(currentCall.caller->getPhone());
-    abonents.remove(currentCall.target->getPhone());
+    // abonents.remove(currentCall.caller->getPhone());
+    // abonents.remove(currentCall.target->getPhone());
 
     // Удаление коммуникаторов
     delete currentCall.commCallerToATS;
@@ -239,6 +245,12 @@ int ATS::findCallRecord(const QString& phone) {
     }
 
     return -1;
+}
+
+QList<Abonent*> ATS::getAllAbonents() {
+
+    return abonents.values(); // Return a list of all Abonent pointers
+
 }
 
 #endif // ATS_CPP

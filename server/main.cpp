@@ -39,8 +39,12 @@ int main(int argc, char *argv[])
     // Очибка - нельзя отправить самому себе
     // p1->sendMessage(p1, message);
 
-    // Чел p2 отправляет 2 смски челу p1
-    // p2->sendMessage(p1, "from p2 to p1 first try");
+    // Чел p2 ложит трубку
+    p2->endCall();
+    qDebug() << (int)a.ats->getAbonent(p1->getPhone())->getStatus() << " " << (int)a.ats->getAbonent(p2->getPhone())->getStatus();
+
+    // Чел p2 отправляет 2 смски челу p1 но звонок уже завершен, в ЧС кинул всё капут
+    p2->sendMessage(p1, "from p2 to p1 first try");
     // p2->sendMessage(p1, "from p2 to p1 second try");
 
     return a.exec();
