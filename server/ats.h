@@ -35,11 +35,11 @@ public:
     // TODO: не забыть удаление коммуникаторов и строки из callRecords после завершения звонка
     void initiateCall(const QString& callerPhone, const QString& targetPhone) {
         if (maxCallsCount == callRecords.length()) {
-            qDebug() << "Не осталось свободных соединений";
+            qDebug() << "Free connections not found";
             return;
         }
         if (callerPhone == targetPhone) {
-            qDebug() << "Нельзя позвонить самому себе";
+            qDebug() << "Can not call to yourself";
             return;
         }
 
@@ -47,7 +47,7 @@ public:
         Abonent* target = getAbonent(targetPhone);
 
         if (!caller || !target) {
-            qDebug() << "Кого-то из собеседников нет в базе АТС";
+            qDebug() << "Caller or target not enrolled to ATS DB";
             return;
         }
 
@@ -90,7 +90,7 @@ public:
 
     void sendMessage(const QString& fromPhone, const QString& toPhone, const QString& message) {
         if (findCallRecord(fromPhone) == -1 || findCallRecord(toPhone) == -1) {
-            qDebug() << "звонок не найден";
+            qDebug() << "Call not found";
             return;
         }
 
@@ -115,7 +115,7 @@ public:
         }
 
         if (!fromAbonent || !toAbonent || fromAbonent == toAbonent) {
-            qDebug() << "Не все участники звонка были найдены, проверьте правильность данных и наличие звонка";
+            qDebug() << "Caller or target not found, check call data";
             return;
         }
 
@@ -148,10 +148,10 @@ public slots:
             QString toPhone = parts[1];
             QString textMessage = parts[2];
 
-            qDebug() << "Отправитель:" << fromPhone << " Получатель:" << toPhone << " Сообщение:" << textMessage;
+            qDebug() << "Sender:" << fromPhone << " reciever:" << toPhone << " text:" << textMessage;
 
             if (findCallRecord(toPhone) == -1) {
-                qDebug() << "Разговор не найден";
+                qDebug() << "Call not found";
                 return;
             }
 
@@ -168,14 +168,14 @@ public slots:
             }
 
             if (!toAbonent) {
-                qDebug() << "Получатель не найден";
+                qDebug() << "Reciever not found";
                 return;
             }
             // toComm->send(QByteArray().append(textMessage.toUtf8()));
             emit messageReceived(fromPhone, toPhone, textMessage); // излучение сигнала вместо реальной отправки
-            qDebug() << "Сообщение было передано на " << toAbonent->getAddress();
+            qDebug() << "Message sent to " << toAbonent->getAddress();
         } else {
-            qDebug() << "Неверный формат сообщения!";
+            qDebug() << "Bad messaage format!";
         }
 
     }

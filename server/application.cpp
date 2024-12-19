@@ -1,6 +1,9 @@
 #include "application.h"
 
-Application::Application(int argc, char *argv[])
-    : QCoreApplication(argc, argv) {}
+TApplication::TApplication(int argc, char *argv[])
+    : QCoreApplication(argc, argv) {
+    qDebug("server started");
+    ats = new ATS();
+}
 
 

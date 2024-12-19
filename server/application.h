@@ -3,12 +3,14 @@
 
 #include <QObject>
 #include <QCoreApplication>
+#include "ats.h"
 
-class Application : public QCoreApplication
+class TApplication : public QCoreApplication
 {
     Q_OBJECT
 public:
-    Application(int, char**);
+    TApplication(int, char**);
+    ATS* ats;
 };
 
 #endif // APPLICATION_H

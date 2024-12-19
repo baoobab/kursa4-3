@@ -2,19 +2,17 @@
 #include "person.h"
 #include "application.h"
 
-ATS ats; // вау, глобальная область видимости
-
 
 int main(int argc, char *argv[])
 {
 
-    Application a(argc, argv);
+    TApplication a(argc, argv);
 
-    ats.setMaxCallsCount(52); // TODO: задавать степенью двойки
+    a.ats->setMaxCallsCount(52); // TODO: задавать степенью двойки
 
     // Обозначили собеседников
-    Person* p1 = new Person("Vasya", "8800", &ats); // TODO: номер фиксированный, либо отдельный тип, либо short phone[const size]
-    Person* p2 = new Person("Kolya", "7952", &ats); // TODO: добавить автоустановку портов
+    Person* p1 = new Person("Vasya", "8800", a.ats); // TODO: номер фиксированный, либо отдельный тип, либо short phone[const size]
+    Person* p2 = new Person("Kolya", "7952", a.ats); // TODO: добавить автоустановку портов
 
     // Внесли их контакты в базу АТС
     p1->enrollToATS();

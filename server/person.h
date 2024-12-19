@@ -49,9 +49,7 @@ public:
 
 public slots:
     void onMessageReceived(QString from, QString to, QString message) {
-        if (to != phone) {
-            return;
-        }
+        if (to != phone) return;
         qDebug() << "Person " << name << " received message from:" << from << "to:" << to << "Text:" << message;
     }
 
