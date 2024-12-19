@@ -13,7 +13,6 @@
 class ATS : public QObject {
 public:
     static const quint16 address = 10000;
-
     // Add this method to your ATS class
 
     QList<Abonent*> getAllAbonents() {

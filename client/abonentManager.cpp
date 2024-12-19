@@ -20,21 +20,30 @@ AbonentManager::AbonentManager(QWidget* parent) : QWidget(parent)
     scrollAreaCon->setWidget(containerCon);
     layoutCon = new QVBoxLayout(containerCon);
     // Add buttons for increasing and decreasing connections
-    increaseConnectionsButton = new QPushButton("Макс. Кол-во соединений +1", this);
-    decreaseConnectionsButton = new QPushButton("Макс. Кол-во соединений -1", this);
+    increaseConnectionsButton = new QPushButton("Макс. Кол-во соединений +1 ✌️", this);
+    decreaseConnectionsButton = new QPushButton("Макс. Кол-во соединений -1 ☝️", this);
     connect(increaseConnectionsButton, &QPushButton::clicked, this, &AbonentManager::increaseMaxConnections);
     connect(decreaseConnectionsButton, &QPushButton::clicked, this, &AbonentManager::decreaseMaxConnections);
     layoutCon->addWidget(increaseConnectionsButton);
     layoutCon->addWidget(decreaseConnectionsButton);
 
     // Create the "Создать соединение" button
-    createConnectionButton = new QPushButton("Создать соединение", this);
+    createConnectionButton = new QPushButton("Создать соединение️ ☡", this);
     connect(createConnectionButton, &QPushButton::clicked, this, &AbonentManager::showCreateConnectionDialog);
     layoutCon->addWidget(createConnectionButton); // Add the button to the left block
 
-    createButton = new QPushButton("Создать абонента", this);
+    createButton = new QPushButton("Создать абонента ✍️", this);
     layoutCon->addWidget(createButton);
     connect(createButton, &QPushButton::clicked, this, &AbonentManager::showCreateDialog);
+
+    pickUpButton = new QPushButton("Снять трубку ☎️ ", this);
+    layoutCon->addWidget(pickUpButton); // Assuming layoutCon is your layout for the left block
+    connect(pickUpButton, &QPushButton::clicked, this, &AbonentManager::showPickUpReceiverDialog);
+
+    QPushButton* hangUpButton = new QPushButton("Положить трубку ☏", this);
+    layoutCon->addWidget(hangUpButton); // Assuming layoutCon is your layout for the left block
+    connect(hangUpButton, &QPushButton::clicked, this, &AbonentManager::showHangUpReceiverDialog);
+
     horizontalLayout->addWidget(scrollAreaCon);
 
     // Center Block - ATS Information with button
@@ -76,24 +85,186 @@ AbonentManager::AbonentManager(QWidget* parent) : QWidget(parent)
     {
 
         // Find the corresponding chat window and append the message
-
         // You may need to maintain a list of chat windows to find the correct one
-
         for (auto chatWindow : chatWindows)
         {
             // Assuming you maintain a list of chat windows
-
             if ((chatWindow->fromPhone == from && chatWindow->toPhone == to) ||
 
                 (chatWindow->fromPhone == to && chatWindow->toPhone == from))
             {
-
                 chatWindow->appendMessage(from + ": " + message);
-
                 break;
             }
         }
     });
+}
+
+void AbonentManager::showHangUpReceiverDialog()
+{
+    // Create a dialog
+    QDialog dialog(this);
+    dialog.setWindowTitle("Выберите абонента");
+
+    // Create a layout for the dialog
+    QVBoxLayout* layout = new QVBoxLayout(&dialog);
+    QLabel* label = new QLabel("Выберите абонента:", this);
+    layout->addWidget(label);
+
+    // Create a combo box to select an abonent
+    QComboBox* abonentComboBox = new QComboBox(this);
+    QList<Abonent*> abonentsList = ats.getAllAbonents();
+
+    for (Abonent* abonent : abonentsList)
+    {
+        abonentComboBox->addItem(abonent->getName(), abonent->getPhone());
+    }
+
+
+    layout->addWidget(abonentComboBox);
+
+
+    // Create an OK button
+    QPushButton* okButton = new QPushButton("OK", this);
+    connect(okButton, &QPushButton::clicked, [&dialog, abonentComboBox]()
+    {
+        dialog.accept(); // Close the dialog when OK is clicked
+    });
+
+
+    layout->addWidget(okButton);
+
+
+    // Show the dialog and wait for user input
+    if (dialog.exec() == QDialog::Accepted)
+    {
+        QString selectedPhone = abonentComboBox->currentData().toString();
+        Abonent* selectedAbonent = ats.getAbonent(selectedPhone);
+
+        if (selectedAbonent)
+        {
+
+            selectedAbonent->setStatus(Abonent::ConnectionStatus::Free); // Set status to Free
+
+            // Update the UI to reflect the change in status
+            for (QWidget* abonentWidget : abonentsWidget)
+            {
+                QHBoxLayout* abonentLayout = qobject_cast<QHBoxLayout*>(abonentWidget->layout());
+                if (abonentLayout)
+                {
+                    QLabel* phoneLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(1)->widget()); // Assuming phone label is at index 1
+                    if (phoneLabel && phoneLabel->text() == selectedPhone)
+                    {
+                        QLabel* statusLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(2)->widget()); // Assuming status label is at index 2
+                        if (statusLabel)
+                        {
+                            statusLabel->setText("Отошел"); // Update the status label
+                            statusLabel->setStyleSheet("color: red;"); // Change color to yellow
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void AbonentManager::showPickUpReceiverDialog()
+{
+    // Create a dialog
+
+    QDialog dialog(this);
+
+    dialog.setWindowTitle("Выберите абонента");
+
+    // Create a layout for the dialog
+    QVBoxLayout* layout = new QVBoxLayout(&dialog);
+    QLabel* label = new QLabel("Выберите абонента:", this);
+    layout->addWidget(label);
+
+
+    // Create a combo box to select an abonent
+    QComboBox* abonentComboBox = new QComboBox(this);
+    QList<Abonent*> abonentsList = ats.getAllAbonents();
+
+    for (Abonent* abonent : abonentsList)
+    {
+        abonentComboBox->addItem(abonent->getName(), abonent->getPhone());
+
+    }
+
+    layout->addWidget(abonentComboBox);
+
+    // Create an OK button
+    QPushButton* okButton = new QPushButton("OK", this);
+    connect(okButton, &QPushButton::clicked, [&dialog, abonentComboBox]() {
+
+        dialog.accept(); // Close the dialog when OK is clicked
+
+    });
+
+    layout->addWidget(okButton);
+
+    // Show the dialog and wait for user input
+    if (dialog.exec() == QDialog::Accepted)
+    {
+//        QString selectedPhone = abonentComboBox->currentData().toString();
+//        Abonent* selectedAbonent = ats.getAbonent(selectedPhone);
+//        if (selectedAbonent)
+//        {
+//            selectedAbonent->setStatus(Abonent::ConnectionStatus::Ready); // Set status to Ready
+//            // Update the UI to reflect the change in status
+////            updateAbonentList(); // Implement this method to refresh the UI
+//        }
+        QString selectedPhone = abonentComboBox->currentData().toString();
+
+                Abonent* selectedAbonent = ats.getAbonent(selectedPhone);
+
+                if (selectedAbonent)
+
+                {
+
+                    selectedAbonent->setStatus(Abonent::ConnectionStatus::Ready); // Set status to Ready
+
+
+                    // Update the UI to reflect the change in status
+
+                    for (QWidget* abonentWidget : abonentsWidget)
+
+                    {
+
+                        QHBoxLayout* abonentLayout = qobject_cast<QHBoxLayout*>(abonentWidget->layout());
+
+                        if (abonentLayout)
+
+                        {
+
+                            QLabel* phoneLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(1)->widget()); // Assuming phone label is at index 1
+
+                            if (phoneLabel && phoneLabel->text() == selectedPhone)
+
+                            {
+
+                                QLabel* statusLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(2)->widget()); // Assuming status label is at index 2
+
+                                if (statusLabel)
+
+                                {
+
+                                    statusLabel->setText("Готов"); // Update the status label
+                                    statusLabel->setStyleSheet("color: green;"); // Change color to green
+                                }
+
+                                break;
+
+                            }
+
+                        }
+
+                    }
+
+                }
+    }
 }
 
 // Implement the removeSelectedAbonent slot
@@ -211,7 +382,8 @@ void AbonentManager::addAbonent(const QString& name, const QString& phone)
     QLabel* phoneLabel = new QLabel(phone, abonentWidget);
 
     // Add a status label
-    QLabel* statusLabel = new QLabel("Готов", abonentWidget); // You can change the status as needed
+    QLabel* statusLabel = new QLabel("Вызов", abonentWidget); // You can change the status as needed
+    statusLabel->setStyleSheet("color: blue;"); // Set initial color to red for "Занят"
 //    QPushButton* deleteButton = new QPushButton("Удалить", abonentWidget);
 
 //    connect(deleteButton, &QPushButton::clicked, this, [this, abonentWidget]()

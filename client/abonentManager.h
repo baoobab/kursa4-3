@@ -41,6 +41,8 @@ private slots:
     void decreaseMaxConnections();
     void showCreateConnectionDialog(); // New slot for creating a connection
     void removeSelectedAbonent(); // New slot for removing selected abonent
+    void showPickUpReceiverDialog();
+    void showHangUpReceiverDialog();
 
 private:
     QLabel* headerLabel;
@@ -68,6 +70,8 @@ private:
 
     // ComboBox for selecting an abonent to delete
     QComboBox* abonentToDeleteComboBox; // New combo box for selecting an abonent to delete
+
+    QPushButton* pickUpButton; // Button to pick up the receiver
 
     // ATS instance
     ATS ats; // Instance of ATS to manage abonents
