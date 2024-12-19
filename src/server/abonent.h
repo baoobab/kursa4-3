@@ -9,8 +9,9 @@
 class Abonent {
 public:
     enum class ConnectionStatus {
-        Ready,      // Свободен, готов к звонку
+        Ready,      // Свободен, снял трубку, может принимать и отправлять звонки
         InCall,     // Участвует в звонке
+        Free,       // Положил трубку, не может принимать и отправлять звонки
     };
 
     Abonent(const QString& name, const QString& phone);
@@ -22,7 +23,8 @@ public:
 
     bool makeCall();
     bool receiveCall();
-    bool endCall();
+    bool receiveEndCall();
+    bool makeEndCall();
 
 private:
     bool changeStatus(ConnectionStatus newStatus);
