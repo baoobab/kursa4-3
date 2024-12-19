@@ -17,7 +17,7 @@ struct ATSMessage {
     ATSMessage() : isSuccess(true), message("OK") {}
     ATSMessage(const QString& msg) : isSuccess(false), message(msg) {}
 
-    operator bool() const { return isSuccess; } // TODO: мб добавить explicit для безопасности
+    operator bool() const { return isSuccess; }
 };
 
 class ATS : public QObject {
@@ -25,9 +25,6 @@ class ATS : public QObject {
 
 public:
     static const quint16 address = 10000; // адрес АТС
-
-    // ATS(QObject* parent = nullptr); // конструктор
-    // ~ATS(); // деструктор для освобождения ресурсов
 
     QList<Abonent*> getAllAbonents();
     ATSMessage addAbonent(const QString& name, const QString& phone);
@@ -43,8 +40,6 @@ public:
 
 signals:
     void messageReceived(QString from, QString to, QString message);
-    // void callEnded(QString caller, QString target); // сигнал о завершении звонка
-
 public slots:
     void receive(QByteArray msg);
 
@@ -61,10 +56,6 @@ private:
                    Abonent* target, TCommunicator* commTargetToATS, TCommunicator* commATSToTarget)
             : caller(caller), commCallerToATS(std::move(commCallerToATS)), commATSToCaller(std::move(commATSToCaller)),
             target(target), commTargetToATS(std::move(commTargetToATS)), commATSToTarget(std::move(commATSToTarget)) {}
-
-        ~CallRecord() {
-            // Дополнительная очистка, если нужно
-        }
     };
 
 

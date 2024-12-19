@@ -84,13 +84,19 @@ ATSMessage ATS::initiateCall(const QString& callerPhone, const QString& targetPh
         }
 
         qDebug() << "Call startded!";
+        // Делаем связь вида: caller -> ATS
         TCommParams paramsCallerToATS = { QHostAddress::LocalHost, ATS::address,
                                          QHostAddress::LocalHost, caller->getAddress() };
+
+        // Делаем связь вида: ATS -> caller
         TCommParams paramsATSToCaller = { QHostAddress::LocalHost, caller->getAddress(),
                                          QHostAddress::LocalHost, ATS::address };
 
+        // Делаем связь вида: target -> ATS
         TCommParams paramsTargetToATS = { QHostAddress::LocalHost, ATS::address,
                                          QHostAddress::LocalHost, target->getAddress() };
+
+        // Делаем связь вида: ATS -> target
         TCommParams paramsATSToTarget = { QHostAddress::LocalHost, target->getAddress(),
                                          QHostAddress::LocalHost, ATS::address };
 
@@ -141,15 +147,10 @@ ATSMessage ATS::endCall(const QString& phone) {
         delete currentCall.target;
     }
 
-    // bool callerEnded = currentCall.caller->endCall();
-    // bool targetEnded = currentCall.target->endCall();
-
     if (!callerEnded || !targetEnded) {
         qDebug() << "Failed to end call for one or both abonents";
         return ATSMessage("Failed to end call");
     }
-    // abonents.remove(currentCall.caller->getPhone());
-    // abonents.remove(currentCall.target->getPhone());
 
     // Удаление коммуникаторов
     delete currentCall.commCallerToATS;
@@ -176,7 +177,7 @@ void ATS::sendMessage(const QString& fromPhone, const QString& toPhone, const QS
 
     CallRecord currentCall = callRecords[findCallRecord(fromPhone)];
 
-    // теперь нужно понять кто отправляет смс - тот кто начал звонок, или его собеседник
+    // Теперь нужно понять кто отправляет смс - тот кто начал звонок, или его собеседник
     Abonent* fromAbonent = nullptr;
     TCommunicator* fromComm = nullptr;
     Abonent* toAbonent = nullptr;
@@ -230,21 +231,18 @@ void ATS::receive(QByteArray msg) {
 
         CallRecord currentCall = callRecords[findCallRecord(toPhone)];
         Abonent* toAbonent = nullptr;
-        TCommunicator* toComm = nullptr;
 
         if (currentCall.caller->getPhone() == toPhone) {
             toAbonent = currentCall.caller;
-            toComm = currentCall.commATSToCaller;
         } else if (currentCall.target->getPhone() == toPhone) {
             toAbonent = currentCall.target;
-            toComm = currentCall.commATSToTarget;
         }
 
         if (!toAbonent) {
             qDebug() << "Reciever not found";
             return;
         }
-        // toComm->send(QByteArray().append(textMessage.toUtf8()));
+
         emit messageReceived(fromPhone, toPhone, textMessage);
         qDebug() << "Message sent to " << toAbonent->getAddress();
     } else {
@@ -265,9 +263,7 @@ int ATS::findCallRecord(const QString& phone) {
 }
 
 QList<Abonent*> ATS::getAllAbonents() {
-
-    return abonents.values(); // Return a list of all Abonent pointers
-
+    return abonents.values();
 }
 
 #endif // ATS_CPP
