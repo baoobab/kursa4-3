@@ -25,7 +25,29 @@ ChatWindow::ChatWindow(const QString& abonent1, const QString& abonent2, QWidget
     inputLayout->addWidget(sendButton);
 
     layout->addLayout(inputLayout);
+
+    TCommParams params = { QHostAddress::LocalHost, 10001,
+                          QHostAddress::LocalHost, 9000 };
+    comm = new TCommunicator(params, this);
+
+    connect(comm,SIGNAL(received(QByteArray)),this,
+            SLOT(fromCommunicator(QByteArray)));
+
+    connect(this,SIGNAL(request(QString)),
+            this,SLOT(toCommunicator(QString)));
 }
+
+void ChatWindow::fromCommunicator(QByteArray msg)
+{
+    // interface->answer(QString(msg));
+    qDebug() << "fromCom CHATWINDOW" << QString(msg);
+}
+
+void ChatWindow::toCommunicator(QString msg)
+{
+    comm->send(QByteArray().append(msg.toUtf8()));
+}
+
 
 void ChatWindow::sendMessage() {
     QString message = messageInput->text();

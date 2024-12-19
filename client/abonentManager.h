@@ -11,14 +11,22 @@
 
 #include "abonentWidget.h"
 #include "createAbonentDialog.h"
+#include "../common/communicator.h"
+
 
 class AbonentManager : public QWidget {
     Q_OBJECT
 
+    TCommunicator* comm;
 public:
     AbonentManager(QWidget* parent = nullptr);
     ~AbonentManager();
+signals:
+    void request(QString);
+    void received(QByteArray msg);
 public slots:
+    void fromCommunicator(QByteArray);
+    void toCommunicator(QString);
     void handleDeleteRequest();
     void addAbonent(const QString& name, const QString& phone, const QString& status = "Свободен");
 private slots:

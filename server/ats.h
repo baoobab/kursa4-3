@@ -57,11 +57,6 @@ public:
             // target->receiveCall(caller);
 
             qDebug() << "Call startded!";
-            // TCommParams paramsCallerToTarget = { QHostAddress::LocalHost, target->getAddress(),
-            //                                  QHostAddress::LocalHost, caller->getAddress() };
-            // TCommParams paramsTargetToCaller = { QHostAddress::LocalHost, caller->getAddress(),
-            //                                     QHostAddress::LocalHost, target->getAddress() };
-
             TCommParams paramsCallerToATS = { QHostAddress::LocalHost, ATS::address,
                                 QHostAddress::LocalHost, caller->getAddress() };
             TCommParams paramsATSToCaller = { QHostAddress::LocalHost, caller->getAddress(),
@@ -78,8 +73,16 @@ public:
             TCommunicator* commATSCaller = new TCommunicator(paramsATSToCaller, this);
             TCommunicator* commATSTarget = new TCommunicator(paramsATSToTarget, this);
 
-            connect(commATSCaller, SIGNAL(received(QByteArray)), this, SLOT(receive(QByteArray)));
-            connect(commATSTarget, SIGNAL(received(QByteArray)), this, SLOT(receive(QByteArray)));
+            // connect(commATSCaller, SIGNAL(received(QByteArray)), this, SLOT(receive(QByteArray)));
+            // connect(commATSTarget, SIGNAL(received(QByteArray)), this, SLOT(receive(QByteArray)));
+
+
+
+            connect(commATSCaller,SIGNAL(received(QByteArray)),commATSTarget,
+                    SLOT(send(QByteArray)));
+
+            // connect(this,SIGNAL(requestToAbonent(QString)),
+            //         commATSTarget,SLOT(send(QByteArray)));
 
             // Store the call record
             callRecords.append(CallRecord(caller, commCaller, commATSCaller, target, commTarget, commATSTarget));
@@ -134,9 +137,41 @@ public:
     void setMaxCallsCount(unsigned newCount) {
         maxCallsCount = newCount;
     }
+
+    void formRequest(const QString& params)
+    {
+        QString req = "zapros ATS";
+        req += params;
+        emit request(req);
+
+        // Эмитируем сигнал запроса для отправки на сервер.
+    }
+
 signals:
     void messageReceived(QString from, QString to, QString message); // новый сигнал
+    void request(QString);
+    void requestToAbonent(QString);
 public slots:
+    void fromAbonent(QByteArray msg) {
+        qDebug() << "fromAbonent " << msg;
+        answerAbonent(QString(msg));
+    }
+
+    void toAbonent(QString msg) {
+        qDebug() << "toAbonent!! " << callRecords[0].target->getPhone() << " " << msg;
+
+        callRecords[0].commATSToTarget->send(QByteArray().append(msg.toUtf8()));
+    }
+
+    void answerAbonent(const QString& response) {
+        qDebug() << "ATS answer abonent" << response;
+        emit requestToAbonent(response);
+    }
+
+    void answer(const QString& response) {
+        qDebug() << "ATS answer" << response;
+        emit request("to WINDOW!");
+    }
 
     void receive(QByteArray msg) {
         QString message = QString::fromUtf8(msg);

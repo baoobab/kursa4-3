@@ -3,6 +3,8 @@
 #include "QtDebug"
 #include "abonent.h"
 #include "ats.h"
+#include "../common/communicator.h"
+
 
 AbonentManager::AbonentManager(QWidget* parent) : QWidget(parent) {
    QVBoxLayout* mainLayout = new QVBoxLayout(this);
@@ -51,6 +53,27 @@ AbonentManager::AbonentManager(QWidget* parent) : QWidget(parent) {
    drawAbonentsTable();
 
    scrollArea->setMaximumWidth(400);
+
+   TCommParams params = { QHostAddress::LocalHost, 10001,
+       QHostAddress::LocalHost, 9000 };
+   comm = new TCommunicator(params, this);
+
+   connect(comm,SIGNAL(received(QByteArray)),this,
+           SLOT(fromCommunicator(QByteArray)));
+
+   connect(this,SIGNAL(request(QString)),
+           this,SLOT(toCommunicator(QString)));
+}
+
+void AbonentManager::fromCommunicator(QByteArray msg)
+{
+    // interface->answer(QString(msg));
+    qDebug() << "fromCom" << QString(msg);
+}
+
+void AbonentManager::toCommunicator(QString msg)
+{
+    comm->send(QByteArray().append(msg.toUtf8()));
 }
 
 void AbonentManager::showCreateDialog() {
@@ -63,6 +86,8 @@ void AbonentManager::showCreateDialog() {
 }
 
 void AbonentManager::addAbonent(const QString& name, const QString& phone, const QString& status) {
+    emit request("add abon");
+    qDebug("add");
     AbonentWidget* abonentWidget = new AbonentWidget(name, phone, status);
     layout->addWidget(abonentWidget);
     abonentsWidget.push_back(abonentWidget);
@@ -162,5 +187,7 @@ AbonentManager::~AbonentManager()
     delete createButton;
     delete layout;
     delete layoutCon;
+
+    delete comm;
 //    delet abonents;
 }

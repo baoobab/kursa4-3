@@ -16,11 +16,12 @@ public:
         this->address = ATS::address + QRandomGenerator::global()->bounded(20000 - ATS::address + 1); // пока так
         this->ats = ats;
 
-        // TCommParams paramsPersonToATS = { QHostAddress::LocalHost, ATS::address,
-                                         // QHostAddress::LocalHost, address };
-        // TCommunicator* commPerson = new TCommunicator(paramsPersonToATS, this);
-
-        connect(ats, SIGNAL(messageReceived(QString, QString, QString)), this, SLOT(onMessageReceived(QString, QString, QString)));
+        TCommParams paramsPersonToATS = { QHostAddress::LocalHost, ATS::address,
+                                         QHostAddress::LocalHost, address };
+        TCommunicator* commPerson = new TCommunicator(paramsPersonToATS, this);
+        connect(commPerson,SIGNAL(received(QByteArray)),this,
+                SLOT(receive(QByteArray)));
+        // connect(ats, SIGNAL(messageReceived(QString, QString, QString)), this, SLOT(onMessageReceived(QString, QString, QString)));
 
     }
 
@@ -57,12 +58,12 @@ public slots:
 
 // public slots:
 
-//     void receive(QByteArray msg) {
-//         QString message = QString::fromUtf8(msg);
-//         if (message.length() > 0) {
-//             qDebug() << getName() << " received message:" << message;
-//         }
-//     }
+    void receive(QByteArray msg) {
+        QString message = QString::fromUtf8(msg);
+        if (message.length() > 0) {
+            qDebug() << getName() << " received message:" << message;
+        }
+    }
 private:
     Q_OBJECT
 
