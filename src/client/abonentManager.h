@@ -16,9 +16,9 @@
 #include <QVector>
 #include <QComboBox> // Include QComboBox for selecting abonents
 
-#include "server/ats.h" // Include ATS header
-#include "server/abonent.h" // Include Abonent header
-#include "server/person.h"
+#include "../server/ats.h" // Include ATS header
+#include "../server/abonent.h" // Include Abonent header
+#include "../server/person.h"
 
 #include "chatWindow.h"
 

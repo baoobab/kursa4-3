@@ -6,7 +6,7 @@
 #include <QDebug>
 #include <QObject>
 #include <QList>
-#include "common/communicator.h"
+#include "../common/communicator.h"
 
 
 // Структура ответа от АТС
