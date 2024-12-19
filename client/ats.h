@@ -13,6 +13,13 @@
 class ATS : public QObject {
 public:
     static const quint16 address = 10000;
+    // Add this method to your ATS class
+
+    QList<Abonent*> getAllAbonents() {
+
+        return abonents.values(); // Return a list of all Abonent pointers
+
+    }
 
     void addAbonent(const QString& name, const QString& phone, const quint16& address) {
         Abonent* abonent = new Abonent(name, phone, address);
