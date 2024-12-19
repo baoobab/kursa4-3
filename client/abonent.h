@@ -20,7 +20,7 @@ public:
         if (address == 0) {
             this->address = 10000 + QRandomGenerator::global()->bounded(20000 - 10000 + 1); // пока так
         }
-        this->status = ConnectionStatus::Ready;
+        this->status = ConnectionStatus::OnHold;
     }
 
     ConnectionStatus getStatus() const { return status; }

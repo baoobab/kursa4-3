@@ -17,11 +17,18 @@ ChatWindow::ChatWindow(const QString& fromPhone, const QString& toPhone, QWidget
     messageInput = new QLineEdit(this);
     inputLayout->addWidget(messageInput);
 
-    sendButton = new QPushButton("Send", this);
+    sendButton = new QPushButton("Send ✈️", this);
     connect(sendButton, &QPushButton::clicked, this, &ChatWindow::sendMessage);
     inputLayout->addWidget(sendButton);
 
+    hangUpButton = new QPushButton("Положить ☄️", this); // Create the Hang Up button
+
+    connect(hangUpButton, &QPushButton::clicked, this, &ChatWindow::endCall); // Connect to endCall slot
+
     layout->addLayout(inputLayout);
+
+    layout->addWidget(hangUpButton); // Add the Hang Up button to the layout
+
 }
 
 
@@ -43,6 +50,18 @@ void ChatWindow::sendMessage()
 void ChatWindow::appendMessage(const QString& message)
 {
     chatArea->append(message);
+}
+
+void ChatWindow::endCall()
+
+{
+
+    // Emit a signal to notify that the call is ending
+
+    emit callEnded(fromPhone, toPhone);
+
+    this->accept(); // Close the chat window
+
 }
 
 

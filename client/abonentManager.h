@@ -43,6 +43,7 @@ private slots:
     void removeSelectedAbonent(); // New slot for removing selected abonent
     void showPickUpReceiverDialog();
     void showHangUpReceiverDialog();
+    void handleCallEnded(const QString& fromPhone, const QString& toPhone);
 
 private:
     QLabel* headerLabel;
