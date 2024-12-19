@@ -1,44 +1,36 @@
 #ifndef ABONENT_H
 #define ABONENT_H
 
+#include <QString>
 #include <QDebug>
+#include <QRandomGenerator>
+
 
 class Abonent {
 public:
-    enum class  ConnectionStatus {
-        Ready,
-        InCall,
-        OnHold,
-        Free
+    enum class ConnectionStatus {
+        Ready,      // Свободен, готов к звонку
+        InCall,     // Участвует в звонке
     };
 
-    Abonent(const QString& phone, const quint16 address) {
-        this->phone = phone;
-        this->address = address;
-        this->status = ConnectionStatus::Ready;
-    }
+    Abonent(const QString& name, const QString& phone);
 
-    ConnectionStatus getStatus() const { return status; }
-    quint16 getAddress() const { return address; }
-    QString getPhone() const { return phone; }
-    void setStatus(ConnectionStatus newStatus) {
-        status = newStatus;
-        qDebug() << "Abonent" << getPhone() << "status changed to" << static_cast<int>(newStatus);
-    }
+    ConnectionStatus getStatus() const;
+    quint16 getAddress() const;
+    QString getPhone() const;
+    QString getName() const;
 
-    // void makeCall(Abonent* target);
-    // void receiveCall(Abonent* caller);
-    // void endCall();
-
-    // void sendMessage(const QString& message) {
-
-    // }
-
+    bool makeCall();
+    bool receiveCall();
+    bool endCall();
 
 private:
+    bool changeStatus(ConnectionStatus newStatus);
+
     ConnectionStatus status;
     quint16 address;
     QString phone;
+    QString name;
 };
 
 #endif // ABONENT_H

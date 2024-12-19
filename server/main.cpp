@@ -15,14 +15,20 @@ int main(int argc, char *argv[])
     Person* p2 = new Person("Kolya", "7952", a.ats); // TODO: добавить автоустановку портов
 
     // Внесли их контакты в базу АТС
-    p1->enrollToATS();
-    p2->enrollToATS();
+    p1->pickUpPhone();
+    p2->pickUpPhone();
 
     // ..смска
     QString message = "allah pomogi!";
 
-    // Чел p1 звонит p2
+    // Чел p1 звонит p2, но p2 положил трубу
+    p2->hangUpPhone();
     p1->makeCall(p2);
+
+    // Чел p1 звонит p2, тепрь все норм
+    p2->pickUpPhone();
+    p1->makeCall(p2);
+
 
     // Чел p1 отправляет смску челу p2
     p1->sendMessage(p2, message);

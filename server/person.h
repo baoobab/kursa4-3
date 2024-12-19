@@ -2,73 +2,33 @@
 #define PERSON_H
 
 #include <QString>
+#include <QObject>
 #include "ats.h"
-#include "QObject"
-#include "QRandomGenerator"
-#include "../common/communicator.h"
 
 
 class Person : public QObject {
+    Q_OBJECT
 public:
-    Person(const QString& name, const QString& phone, ATS* ats) {
-        this->name = name;
-        this->phone = phone;
-        this->address = ATS::address + QRandomGenerator::global()->bounded(20000 - ATS::address + 1); // пока так
-        this->ats = ats;
+    Person(const QString& name, const QString& phone, ATS* ats);
+    ~Person(); // деструктор для корректного отключения сигналов
 
-        // TCommParams paramsPersonToATS = { QHostAddress::LocalHost, ATS::address,
-                                         // QHostAddress::LocalHost, address };
-        // TCommunicator* commPerson = new TCommunicator(paramsPersonToATS, this);
+    QString getName() const;
+    QString getPhone() const;
 
-        connect(ats, SIGNAL(messageReceived(QString, QString, QString)), this, SLOT(onMessageReceived(QString, QString, QString)));
-
-    }
-
-    // ~Person() {
-    //     delete communicator;
-    // }
-
-    QString getName() const { return name; }
-    QString getPhone() const { return phone; }
-    quint16 getAddress() const { return address; }
-
-    void enrollToATS() {
-        (*ats).addAbonent(phone, address);
-    }
-
-    void makeCall(const Person* target) {
-        (*ats).initiateCall(phone, target->getPhone());
-    }
-
-    void receiveCall(Abonent* caller);
+    void pickUpPhone();
+    void hangUpPhone();
+    void makeCall(const Person* target);
     void endCall();
-
-    void sendMessage(const Person* target, const QString message) {
-        (*ats).sendMessage(phone, target->getPhone(), message);
-    }
+    void sendMessage(const Person* target, const QString message);
 
 public slots:
-    void onMessageReceived(QString from, QString to, QString message) {
-        if (to != phone) return;
-        qDebug() << "Person " << name << " received message from:" << from << "to:" << to << "Text:" << message;
-    }
+    void received(QString from, QString to, QString message);
 
-// public slots:
-
-//     void receive(QByteArray msg) {
-//         QString message = QString::fromUtf8(msg);
-//         if (message.length() > 0) {
-//             qDebug() << getName() << " received message:" << message;
-//         }
-//     }
 private:
-    Q_OBJECT
-
     QString name;
     QString phone;
-    quint16 address;
-    // TCommunicator* communicator;
     ATS* ats;
 };
 
 #endif // PERSON_H
+
