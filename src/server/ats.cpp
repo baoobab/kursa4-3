@@ -10,14 +10,13 @@
 #include "../common/communicator.h"
 
 ATSMessage ATS::addAbonent(const QString& name, const QString& phone) {
-    auto abonentsCountBefore = abonents.size();
+    if (abonents.contains(phone)) {
+        return ATSMessage("Abonent already exists"); // Возврат ошибки
+    }
 
     Abonent* abonent = new Abonent(name, phone);
     abonents.insert(abonent->getPhone(), abonent);
 
-    if (abonents.size() == abonentsCountBefore) {
-        return ATSMessage("Abonent already exists"); // Возврат ошибки
-    }
     if (maxCallsCount == callRecords.length()) {
         qDebug() << "Free connections not found";
         return ATSMessage("Free connections not found");
@@ -42,6 +41,29 @@ ATSMessage ATS::removeAbonent(const QString& phone) {
 Abonent* ATS::getAbonent(const QString& phone) {
     return abonents.contains(phone) ? abonents[phone] : nullptr;
 }
+
+Abonent::ConnectionStatus ATS::getAbonentStatus(const QString& phone) {
+    auto abonent = getAbonent(phone);
+    if (abonent) return abonent->getStatus();
+    return Abonent::ConnectionStatus::Free;
+}
+
+QString ATS::getAbonentStatusString (const QString& phone) {
+    auto status = getAbonentStatus(phone);
+
+    switch (status) {
+    case Abonent::ConnectionStatus::Free: {
+        return "Свободен";
+    }
+    case Abonent::ConnectionStatus::Ready: {
+        return "Готов";
+    }
+    case Abonent::ConnectionStatus::InCall: {
+        return "Разговор";
+    }
+    }
+}
+
 
 ATSMessage ATS::initiateCall(const QString& callerPhone, const QString& targetPhone) {
     if (maxCallsCount == callRecords.length()) {
@@ -78,13 +100,19 @@ ATSMessage ATS::initiateCall(const QString& callerPhone, const QString& targetPh
         }
 
         qDebug() << "Call startded!";
+        // Делаем связь вида: caller -> ATS
         TCommParams paramsCallerToATS = { QHostAddress::LocalHost, ATS::address,
                                          QHostAddress::LocalHost, caller->getAddress() };
+
+        // Делаем связь вида: ATS -> caller
         TCommParams paramsATSToCaller = { QHostAddress::LocalHost, caller->getAddress(),
                                          QHostAddress::LocalHost, ATS::address };
 
+        // Делаем связь вида: target -> ATS
         TCommParams paramsTargetToATS = { QHostAddress::LocalHost, ATS::address,
                                          QHostAddress::LocalHost, target->getAddress() };
+
+        // Делаем связь вида: ATS -> target
         TCommParams paramsATSToTarget = { QHostAddress::LocalHost, target->getAddress(),
                                          QHostAddress::LocalHost, ATS::address };
 
@@ -117,16 +145,28 @@ ATSMessage ATS::endCall(const QString& phone) {
     int callRecordIndex = findCallRecord(phone);
     CallRecord& currentCall = callRecords[callRecordIndex];
 
+    bool callerEnded = false;
+    bool targetEnded = false;
     // Изменение состояния абонентов
-    bool callerEnded = currentCall.caller->endCall();
-    bool targetEnded = currentCall.target->endCall();
+    if (currentCall.caller->getPhone() == phone) {
+        callerEnded = currentCall.caller->makeEndCall(); // Тот кто ложит трубку - получает статус Free
+        targetEnded = currentCall.target->receiveEndCall(); // Тот кто остается на оборванной линии - статус Ready, тк трубка снята
+
+        abonents.remove(currentCall.caller->getPhone());
+        delete currentCall.caller;
+    }
+    if (currentCall.target->getPhone() == phone) {
+        callerEnded = currentCall.target->makeEndCall(); // Тот кто ложит трубку - получает статус Free
+        targetEnded = currentCall.caller->receiveEndCall(); // Тот кто остается на оборванной линии - статус Ready, тк трубка снята
+
+        abonents.remove(currentCall.target->getPhone());
+        delete currentCall.target;
+    }
 
     if (!callerEnded || !targetEnded) {
         qDebug() << "Failed to end call for one or both abonents";
         return ATSMessage("Failed to end call");
     }
-    abonents.remove(currentCall.caller->getPhone());
-    abonents.remove(currentCall.target->getPhone());
 
     // Удаление коммуникаторов
     delete currentCall.commCallerToATS;
@@ -153,7 +193,7 @@ void ATS::sendMessage(const QString& fromPhone, const QString& toPhone, const QS
 
     CallRecord currentCall = callRecords[findCallRecord(fromPhone)];
 
-    // теперь нужно понять кто отправляет смс - тот кто начал звонок, или его собеседник
+    // Теперь нужно понять кто отправляет смс - тот кто начал звонок, или его собеседник
     Abonent* fromAbonent = nullptr;
     TCommunicator* fromComm = nullptr;
     Abonent* toAbonent = nullptr;
@@ -188,6 +228,13 @@ void ATS::setMaxCallsCount(unsigned newCount) {
     maxCallsCount = newCount;
 }
 
+int ATS::getCurrentConnections() {
+    return (int)callRecords.length();
+}
+int ATS::getMaxConnections() {
+    return (int)maxCallsCount;
+}
+
 void ATS::receive(QByteArray msg) {
     QString message = QString::fromUtf8(msg);
 
@@ -207,21 +254,18 @@ void ATS::receive(QByteArray msg) {
 
         CallRecord currentCall = callRecords[findCallRecord(toPhone)];
         Abonent* toAbonent = nullptr;
-        TCommunicator* toComm = nullptr;
 
         if (currentCall.caller->getPhone() == toPhone) {
             toAbonent = currentCall.caller;
-            toComm = currentCall.commATSToCaller;
         } else if (currentCall.target->getPhone() == toPhone) {
             toAbonent = currentCall.target;
-            toComm = currentCall.commATSToTarget;
         }
 
         if (!toAbonent) {
             qDebug() << "Reciever not found";
             return;
         }
-        // toComm->send(QByteArray().append(textMessage.toUtf8()));
+
         emit messageReceived(fromPhone, toPhone, textMessage);
         qDebug() << "Message sent to " << toAbonent->getAddress();
     } else {
@@ -239,6 +283,10 @@ int ATS::findCallRecord(const QString& phone) {
     }
 
     return -1;
+}
+
+QList<Abonent*> ATS::getAllAbonents() {
+    return abonents.values();
 }
 
 #endif // ATS_CPP

@@ -6,7 +6,7 @@
 #include <QDebug>
 #include <QObject>
 #include <QList>
-#include "../common/communicator.h"
+#include "common/communicator.h"
 
 
 // Структура ответа от АТС
@@ -17,7 +17,7 @@ struct ATSMessage {
     ATSMessage() : isSuccess(true), message("OK") {}
     ATSMessage(const QString& msg) : isSuccess(false), message(msg) {}
 
-    operator bool() const { return isSuccess; } // TODO: мб добавить explicit для безопасности
+    operator bool() const { return isSuccess; }
 };
 
 class ATS : public QObject {
@@ -26,12 +26,15 @@ class ATS : public QObject {
 public:
     static const quint16 address = 10000; // адрес АТС
 
-    // ATS(QObject* parent = nullptr); // конструктор
-    // ~ATS(); // деструктор для освобождения ресурсов
+    QList<Abonent*> getAllAbonents();
+    int getCurrentConnections();
+    int getMaxConnections();
 
     ATSMessage addAbonent(const QString& name, const QString& phone);
     ATSMessage removeAbonent(const QString& phone);
     Abonent* getAbonent(const QString& phone);
+    Abonent::ConnectionStatus getAbonentStatus(const QString& phone);
+    QString getAbonentStatusString (const QString& phone);
 
     ATSMessage initiateCall(const QString& callerPhone, const QString& targetPhone);
     ATSMessage endCall(const QString& phone);
@@ -41,8 +44,6 @@ public:
 
 signals:
     void messageReceived(QString from, QString to, QString message);
-    // void callEnded(QString caller, QString target); // сигнал о завершении звонка
-
 public slots:
     void receive(QByteArray msg);
 
@@ -59,16 +60,12 @@ private:
                    Abonent* target, TCommunicator* commTargetToATS, TCommunicator* commATSToTarget)
             : caller(caller), commCallerToATS(std::move(commCallerToATS)), commATSToCaller(std::move(commATSToCaller)),
             target(target), commTargetToATS(std::move(commTargetToATS)), commATSToTarget(std::move(commATSToTarget)) {}
-
-        ~CallRecord() {
-            // Дополнительная очистка, если нужно
-        }
     };
 
 
     QMap<QString, Abonent*> abonents;
     QList<CallRecord> callRecords;
-    unsigned maxCallsCount;
+    unsigned maxCallsCount = 0;
 
     int findCallRecord(const QString& phone);
 };

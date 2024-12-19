@@ -25,16 +25,19 @@ bool Abonent::makeCall() {
 bool Abonent::receiveCall() {
     return changeStatus(ConnectionStatus::InCall);
 }
-bool Abonent::endCall() {
+bool Abonent::receiveEndCall() {
     return changeStatus(ConnectionStatus::Ready);
+}
+bool Abonent::makeEndCall() {
+    return changeStatus(ConnectionStatus::Free);
 }
 
 bool Abonent::changeStatus(ConnectionStatus newStatus) {
     // Таблица переходов (машина состояний)
     static const std::map<ConnectionStatus, std::map<ConnectionStatus, bool>> transitions = {
-        {ConnectionStatus::Ready, {{ConnectionStatus::InCall, true}}}, // , {ConnectionStatus::Free, false}
-        {ConnectionStatus::InCall, {{ConnectionStatus::Ready, true}}}, // , {ConnectionStatus::Free, false}
-        // {ConnectionStatus::Free, {{ConnectionStatus::Ready, true}, {ConnectionStatus::InCall, false}}}
+        {ConnectionStatus::Ready, {{ConnectionStatus::InCall, true}, {ConnectionStatus::Free, true}}}, // , {ConnectionStatus::Free, false}
+        {ConnectionStatus::InCall, {{ConnectionStatus::Ready, true}, {ConnectionStatus::Free, true}}}, // , {ConnectionStatus::Free, false}
+        {ConnectionStatus::Free, {{ConnectionStatus::Ready, true}, {ConnectionStatus::InCall, false}}}
     };
 
     auto it = transitions.find(status);
