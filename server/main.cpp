@@ -41,11 +41,17 @@ int main(int argc, char *argv[])
 
     // Чел p2 ложит трубку
     p2->endCall();
-    qDebug() << (int)a.ats->getAbonent(p1->getPhone())->getStatus() << " " << (int)a.ats->getAbonent(p2->getPhone())->getStatus();
+    qDebug() << (int)a.ats->getAbonentStatus(p1->getPhone()) << " " << (int)a.ats->getAbonentStatus(p2->getPhone());
 
     // Чел p2 отправляет 2 смски челу p1 но звонок уже завершен, в ЧС кинул всё капут
     p2->sendMessage(p1, "from p2 to p1 first try");
-    // p2->sendMessage(p1, "from p2 to p1 second try");
+
+    // p2 так-то яростно повесил трубу, и пытается позвонить, не подняв её - ошибка будет
+    p2->makeCall(p1);
+
+    // Вот теперь все будет ок
+    p2->pickUpPhone();
+    p2->makeCall(p1);
 
     return a.exec();
 }

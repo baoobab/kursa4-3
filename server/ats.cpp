@@ -123,9 +123,26 @@ ATSMessage ATS::endCall(const QString& phone) {
     int callRecordIndex = findCallRecord(phone);
     CallRecord& currentCall = callRecords[callRecordIndex];
 
+    bool callerEnded = false;
+    bool targetEnded = false;
     // Изменение состояния абонентов
-    bool callerEnded = currentCall.caller->endCall();
-    bool targetEnded = currentCall.target->endCall();
+    if (currentCall.caller->getPhone() == phone) {
+        callerEnded = currentCall.caller->makeEndCall(); // Тот кто ложит трубку - получает статус Free
+        targetEnded = currentCall.target->receiveEndCall(); // Тот кто остается на оборванной линии - статус Ready, тк трубка снята
+
+        abonents.remove(currentCall.caller->getPhone());
+        delete currentCall.caller;
+    }
+    if (currentCall.target->getPhone() == phone) {
+        callerEnded = currentCall.target->makeEndCall(); // Тот кто ложит трубку - получает статус Free
+        targetEnded = currentCall.caller->receiveEndCall(); // Тот кто остается на оборванной линии - статус Ready, тк трубка снята
+
+        abonents.remove(currentCall.target->getPhone());
+        delete currentCall.target;
+    }
+
+    // bool callerEnded = currentCall.caller->endCall();
+    // bool targetEnded = currentCall.target->endCall();
 
     if (!callerEnded || !targetEnded) {
         qDebug() << "Failed to end call for one or both abonents";

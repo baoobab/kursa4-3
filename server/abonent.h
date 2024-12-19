@@ -23,7 +23,8 @@ public:
 
     bool makeCall();
     bool receiveCall();
-    bool endCall();
+    bool receiveEndCall();
+    bool makeEndCall();
 
 private:
     bool changeStatus(ConnectionStatus newStatus);
