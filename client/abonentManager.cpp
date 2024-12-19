@@ -100,6 +100,89 @@ AbonentManager::AbonentManager(QWidget* parent) : QWidget(parent)
     });
 }
 
+void AbonentManager::handleCallEnded(const QString& fromPhone, const QString& toPhone)
+
+{
+    // Get the abonents involved in the call
+
+        Abonent* endingAbonent = ats.getAbonent(fromPhone); // The one who ends the call
+
+        Abonent* otherAbonent = ats.getAbonent(toPhone); // The other abonent
+
+
+        if (endingAbonent) {
+
+            // Set the ending abonent's status to "Отошел" (On Hold)
+            endingAbonent->setStatus(Abonent::ConnectionStatus::OnHold);
+
+        }
+
+        if (otherAbonent->getStatus() == Abonent::ConnectionStatus::OnHold)
+        {
+            endingAbonent->setStatus(Abonent::ConnectionStatus::OnHold);
+            return;
+        }
+
+        if (otherAbonent) {
+
+            // Set the other abonent's status to "Готов" (Ready)
+
+            otherAbonent->setStatus(Abonent::ConnectionStatus::Ready);
+
+        }
+
+
+        // Update the UI for both abonents to reflect the status changes
+
+        for (QWidget* abonentWidget : abonentsWidget) {
+
+            QHBoxLayout* abonentLayout = qobject_cast<QHBoxLayout*>(abonentWidget->layout());
+
+            if (abonentLayout) {
+
+                QLabel* phoneLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(1)->widget()); // Assuming phone label is at index 1
+
+                QLabel* statusLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(2)->widget()); // Assuming status label is at index 2
+
+
+                if (phoneLabel) {
+
+                    if (phoneLabel->text() == fromPhone) {
+
+                        if (statusLabel) {
+
+                            statusLabel->setText("Отошел"); // Update the status label to "Отошел"
+
+                            statusLabel->setStyleSheet("color: red;"); // Set color to red or any color you prefer
+
+                        }
+
+                    } else if (phoneLabel->text() == toPhone) {
+
+                        if (statusLabel) {
+
+                            statusLabel->setText("Готов"); // Update the status label to "Готов"
+
+                            statusLabel->setStyleSheet("color: green;"); // Set color to green or any color you prefer
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+
+    // Logic to end the call in ATS
+
+//    ats.endCall(fromPhone, toPhone); TOODO: implement
+
+}
+
+
 void AbonentManager::showHangUpReceiverDialog()
 {
     // Create a dialog
@@ -190,7 +273,6 @@ void AbonentManager::showPickUpReceiverDialog()
     for (Abonent* abonent : abonentsList)
     {
         abonentComboBox->addItem(abonent->getName(), abonent->getPhone());
-
     }
 
     layout->addWidget(abonentComboBox);
@@ -314,8 +396,17 @@ void AbonentManager::showCreateConnectionDialog()
         currentConnections++;
 
         QString abonent1Phone = abonent1ComboBox->currentData().toString();
-
         QString abonent2Phone = abonent2ComboBox->currentData().toString();
+
+        // Check the status of the selected abonents
+        Abonent* abonent1 = ats.getAbonent(abonent1Phone);
+        Abonent* abonent2 = ats.getAbonent(abonent2Phone);
+        if (abonent1->getStatus() != Abonent::ConnectionStatus::Ready || abonent2->getStatus() != Abonent::ConnectionStatus::Ready)
+        {
+            QMessageBox::warning(this, "Ошибка", "Оба абонента должны быть в статусе 'Готов' для создания соединения.");
+            return; // Exit the method if either abonent is not ready
+        }
+
 
         // Logic to create the connection
         initiateCall(abonent1Phone, abonent2Phone);
@@ -326,6 +417,11 @@ void AbonentManager::showCreateConnectionDialog()
         // Connect signals to send messages through ATS
         connect(chatWindowA, &ChatWindow::messageSent, this, &AbonentManager::sendMessage);
         connect(chatWindowB, &ChatWindow::messageSent, this, &AbonentManager::sendMessage);
+
+        // Connect signal to end the call
+        connect(chatWindowA, &ChatWindow::callEnded, this, &AbonentManager::handleCallEnded);
+        connect(chatWindowB, &ChatWindow::callEnded, this, &AbonentManager::handleCallEnded);
+
 
         // Add chat windows to the list
         chatWindows.append(chatWindowA);
@@ -382,8 +478,12 @@ void AbonentManager::addAbonent(const QString& name, const QString& phone)
     QLabel* phoneLabel = new QLabel(phone, abonentWidget);
 
     // Add a status label
-    QLabel* statusLabel = new QLabel("Вызов", abonentWidget); // You can change the status as needed
-    statusLabel->setStyleSheet("color: blue;"); // Set initial color to red for "Занят"
+//    QLabel* statusLabel = new QLabel("Вызов", abonentWidget); // You can change the status as needed
+//    statusLabel->setStyleSheet("color: blue;"); // Set initial color to red for "Занят"
+    QLabel* statusLabel = new QLabel("Отошел", abonentWidget); // You can change the status as needed
+    statusLabel->setStyleSheet("color: red;"); // Set initial color to red for "Занят"
+
+
 //    QPushButton* deleteButton = new QPushButton("Удалить", abonentWidget);
 
 //    connect(deleteButton, &QPushButton::clicked, this, [this, abonentWidget]()
@@ -445,6 +545,54 @@ void AbonentManager::drawAbonentsTable()
 void AbonentManager::initiateCall(const QString& callerPhone, const QString& targetPhone)
 {
    ats.initiateCall(callerPhone, targetPhone);
+   // Change the status of both abonents to InCall
+
+   Abonent* callerAbonent = ats.getAbonent(callerPhone);
+
+   Abonent* targetAbonent = ats.getAbonent(targetPhone);
+
+
+   if (callerAbonent) {
+
+       callerAbonent->setStatus(Abonent::ConnectionStatus::InCall);
+
+   }
+
+   if (targetAbonent) {
+
+       targetAbonent->setStatus(Abonent::ConnectionStatus::InCall);
+
+   }
+
+
+   // Update the UI for both abonents
+
+   for (QWidget* abonentWidget : abonentsWidget) {
+
+       QHBoxLayout* abonentLayout = qobject_cast<QHBoxLayout*>(abonentWidget->layout());
+
+       if (abonentLayout) {
+
+           QLabel* phoneLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(1)->widget()); // Assuming phone label is at index 1
+
+           QLabel* statusLabel = qobject_cast<QLabel*>(abonentLayout->itemAt(2)->widget()); // Assuming status label is at index 2
+
+
+           if (phoneLabel) {
+
+               if (phoneLabel->text() == callerPhone || phoneLabel->text() == targetPhone) {
+
+                   if (statusLabel) {
+
+                       statusLabel->setText("Вызов"); // Update the status label to "Вызов"
+
+                       statusLabel->setStyleSheet("color: blue;"); // Set color to blue or any color you prefer
+
+                   }
+               }
+           }
+       }
+   }
 }
 
 
